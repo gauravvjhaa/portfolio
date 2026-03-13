@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'dart:html' as html;
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-import '../constants.dart';
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import 'package:intl/intl.dart';
+import 'package:portfolio/widgets/layout.dart';
+import 'dart:html' as html;
+import '../widgets/reusable.dart';
+import '../main.dart'; // For supabase client and storageUrl
 
 class CertificationsPage extends StatefulWidget {
   const CertificationsPage({Key? key}) : super(key: key);
@@ -56,8 +54,10 @@ class _CertificationsPageState extends State<CertificationsPage> {
                   return ErrorState(
                     message:
                         "Failed to load certifications. Please try again later.",
-                    onRetry: () => setState(() =>
-                        _certificationsFuture = _fetchCertifications()),
+                    onRetry:
+                        () => setState(
+                          () => _certificationsFuture = _fetchCertifications(),
+                        ),
                   );
                 }
 
@@ -71,8 +71,7 @@ class _CertificationsPageState extends State<CertificationsPage> {
 
                 return ListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: certs.length,
                   itemBuilder: (context, index) {
                     final cert = certs[index];
@@ -80,12 +79,14 @@ class _CertificationsPageState extends State<CertificationsPage> {
                       name: cert['name'] ?? '',
                       authority: cert['authority'] ?? '',
                       description: cert['description'],
-                      issueDate: cert['issue_date'] != null
-                          ? DateTime.parse(cert['issue_date'])
-                          : null,
-                      expiryDate: cert['expiry_date'] != null
-                          ? DateTime.parse(cert['expiry_date'])
-                          : null,
+                      issueDate:
+                          cert['issue_date'] != null
+                              ? DateTime.parse(cert['issue_date'])
+                              : null,
+                      expiryDate:
+                          cert['expiry_date'] != null
+                              ? DateTime.parse(cert['expiry_date'])
+                              : null,
                       credentialId: cert['credential_id'],
                       credentialUrl: cert['credential_url'],
                       fileUrl: cert['file_url'],
@@ -132,57 +133,52 @@ class CertificateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasFileUrl = fileUrl != null && fileUrl!.isNotEmpty;
-    final certificateFileUrl = hasFileUrl
-        ? (fileUrl!.startsWith('http')
-            ? fileUrl!
-            : '$storageUrl/certificates/$fileUrl')
-        : null;
+    final certificateFileUrl =
+        hasFileUrl
+            ? (fileUrl!.startsWith('http')
+                ? fileUrl!
+                : '$storageUrl/certificates/$fileUrl')
+            : null;
 
     final hasCredentialUrl = credentialUrl != null && credentialUrl!.isNotEmpty;
 
     return Card(
       color: Theme.of(context).colorScheme.surface,
       margin: const EdgeInsets.only(bottom: 24),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: certificateFileUrl != null
-            ? () {
-                html.window.open(certificateFileUrl, 'Certificate');
-              }
-            : null,
+        onTap:
+            certificateFileUrl != null
+                ? () {
+                  html.window.open(certificateFileUrl, 'Certificate');
+                }
+                : null,
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           name,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color:
-                                Theme.of(context).colorScheme.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
                         Text(
                           authority,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onBackground,
+                            color: Theme.of(context).colorScheme.onBackground,
                           ),
                         ),
                       ],
@@ -191,11 +187,9 @@ class CertificateCard extends StatelessWidget {
                   if (certificateFileUrl != null)
                     IconButton(
                       icon: const Icon(Icons.file_open),
-                      color:
-                          Theme.of(context).colorScheme.secondary,
+                      color: Theme.of(context).colorScheme.secondary,
                       onPressed: () {
-                        html.window.open(
-                            certificateFileUrl, 'Certificate');
+                        html.window.open(certificateFileUrl, 'Certificate');
                       },
                       tooltip: 'View Certificate',
                     ),
@@ -255,11 +249,10 @@ class CertificateCard extends StatelessWidget {
                   icon: const Icon(Icons.verified),
                   label: const Text('Verify Credential'),
                   onPressed: () {
-                    launchUrl(Uri.parse(credentialUrl!));
+                    html.window.open(credentialUrl!, '_blank');
                   },
                   style: TextButton.styleFrom(
-                    foregroundColor:
-                        Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
               ],

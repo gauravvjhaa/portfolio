@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class EmptyState extends StatelessWidget {
   final String message;
@@ -23,8 +23,8 @@ class EmptyState extends StatelessWidget {
             Text(
               message,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -58,8 +58,8 @@ class ErrorState extends StatelessWidget {
             Text(
               message,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -86,7 +86,6 @@ class LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Match the exact look-and-feel from pasted2.txt
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -128,39 +127,5 @@ class SectionTitle extends StatelessWidget {
         ),
       ],
     ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.1, end: 0);
-  }
-}
-
-class AnimatedContentContainer extends StatelessWidget {
-  final Widget child;
-  const AnimatedContentContainer({Key? key, required this.child})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 1200),
-      child: child,
-    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0);
-  }
-}
-
-class Responsive extends StatelessWidget {
-  final Widget mobile;
-  final Widget desktop;
-  const Responsive({Key? key, required this.mobile, required this.desktop})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 900) {
-          return mobile;
-        } else {
-          return desktop;
-        }
-      },
-    );
   }
 }

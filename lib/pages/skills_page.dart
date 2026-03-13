@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import '../main.dart'; // For supabase client
+import '../widgets/layout.dart';
+import '../widgets/reusable.dart';
 
 class SkillsPage extends StatefulWidget {
   const SkillsPage({Key? key}) : super(key: key);
@@ -43,8 +43,7 @@ class _SkillsPageState extends State<SkillsPage> {
             const SizedBox(height: 24),
             Text(
               "Here are the technologies and skills I've acquired throughout my journey:",
-              style:
-                  Theme.of(context).textTheme.bodyLarge!.copyWith(height: 1.6),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(height: 1.6),
             ),
             const SizedBox(height: 32),
             FutureBuilder<List<Map<String, dynamic>>>(
@@ -57,23 +56,23 @@ class _SkillsPageState extends State<SkillsPage> {
                 if (snapshot.hasError) {
                   return ErrorState(
                     message: "Failed to load skills. Please try again later.",
-                    onRetry: () =>
-                        setState(() => _skillsFuture = _fetchSkills()),
+                    onRetry: () => setState(() => _skillsFuture = _fetchSkills()),
                   );
                 }
 
                 final skills = snapshot.data ?? [];
 
                 if (skills.isEmpty) {
-                  return const EmptyState(
-                      message: "No skills to display yet.");
+                  return const EmptyState(message: "No skills to display yet.");
                 }
 
-                final Map<String, List<Map<String, dynamic>>> skillsByCategory =
-                    {};
+                // Group skills by category
+                final Map<String, List<Map<String, dynamic>>> skillsByCategory = {};
                 for (var skill in skills) {
                   final category = skill['category'] as String? ?? 'Other';
-                  skillsByCategory.putIfAbsent(category, () => []);
+                  if (!skillsByCategory.containsKey(category)) {
+                    skillsByCategory[category] = [];
+                  }
                   skillsByCategory[category]!.add(skill);
                 }
 
@@ -87,8 +86,7 @@ class _SkillsPageState extends State<SkillsPage> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color:
-                                Theme.of(context).colorScheme.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -98,8 +96,7 @@ class _SkillsPageState extends State<SkillsPage> {
                           children: entry.value.map((skill) {
                             return SkillChip(
                               name: skill['name'] ?? '',
-                              proficiency:
-                                  skill['proficiency'] as int? ?? 0,
+                              proficiency: skill['proficiency'] as int? ?? 0,
                             );
                           }).toList(),
                         ),
@@ -121,17 +118,14 @@ class SkillChip extends StatelessWidget {
   final String name;
   final int proficiency;
 
-  const SkillChip({Key? key, required this.name, required this.proficiency})
-      : super(key: key);
+  const SkillChip({Key? key, required this.name, required this.proficiency}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).colorScheme.secondary.withOpacity(0.13),
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.13),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -146,13 +140,9 @@ class SkillChip extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .secondary
-                  .withOpacity(0.2),
+              color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -160,8 +150,7 @@ class SkillChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color:
-                    Theme.of(context).colorScheme.secondary,
+                color: Theme.of(context).colorScheme.secondary,
               ),
             ),
           ),

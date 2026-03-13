@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import '../widgets/components.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../widgets/layout.dart';
+import '../widgets/reusable.dart';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({Key? key}) : super(key: key);
@@ -83,16 +83,12 @@ class _ContactPageState extends State<ContactPage> {
             const SizedBox(height: 24),
             Text(
               "Feel free to reach out to me with any questions or opportunities.",
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge!
-                  .copyWith(height: 1.6),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(height: 1.6),
             ),
             const SizedBox(height: 32),
             Responsive(
               mobile: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildContactInfo(context),
                   const SizedBox(height: 40),
@@ -100,8 +96,7 @@ class _ContactPageState extends State<ContactPage> {
                 ],
               ),
               desktop: Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 2, child: _buildContactInfo(context)),
                   const SizedBox(width: 60),
@@ -117,8 +112,7 @@ class _ContactPageState extends State<ContactPage> {
 
   Widget _buildContactInfo(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Let's Connect",
@@ -145,18 +139,17 @@ class _ContactPageState extends State<ContactPage> {
         const SizedBox(height: 24),
         Text(
           "Or find me on social media:",
-          style: TextStyle(
-              color: Theme.of(context).colorScheme.onBackground),
+          style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
         ),
         const SizedBox(height: 16),
         Row(
-          children: const [
+          children: [
             SocialIconWithLabel(
               icon: Icons.code,
               label: 'GitHub',
               url: 'https://github.com/gauravvjhaa',
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             SocialIconWithLabel(
               icon: Icons.person,
               label: 'LinkedIn',
@@ -177,21 +170,17 @@ class _ContactPageState extends State<ContactPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon,
-              color: Theme.of(context).colorScheme.secondary, size: 24),
+          Icon(icon, color: Theme.of(context).colorScheme.secondary, size: 24),
           const SizedBox(width: 16),
           Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onBackground,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -200,8 +189,7 @@ class _ContactPageState extends State<ContactPage> {
               Text(
                 value,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -215,13 +203,11 @@ class _ContactPageState extends State<ContactPage> {
     if (_submitted) {
       return Card(
         color: Colors.green.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
                 Icons.check_circle_outline,
@@ -234,8 +220,7 @@ class _ContactPageState extends State<ContactPage> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color:
-                      Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
               ),
               const SizedBox(height: 8),
@@ -243,8 +228,7 @@ class _ContactPageState extends State<ContactPage> {
                 'Thank you for reaching out. I will get back to you as soon as possible.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -264,21 +248,18 @@ class _ContactPageState extends State<ContactPage> {
 
     return Card(
       color: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 "Send Me a Message",
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -292,14 +273,12 @@ class _ContactPageState extends State<ContactPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.background,
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -317,14 +296,12 @@ class _ContactPageState extends State<ContactPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.background,
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -344,15 +321,13 @@ class _ContactPageState extends State<ContactPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.background,
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 maxLines: 5,
                 style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onBackground,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -376,10 +351,8 @@ class _ContactPageState extends State<ContactPage> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.secondary,
-                    foregroundColor:
-                        Theme.of(context).colorScheme.background,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.background,
                   ),
                   child: _isSubmitting
                       ? SizedBox(
@@ -387,9 +360,7 @@ class _ContactPageState extends State<ContactPage> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .background,
+                            color: Theme.of(context).colorScheme.background,
                           ),
                         )
                       : const Text('Send Message'),

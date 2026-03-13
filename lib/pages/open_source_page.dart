@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:portfolio/widgets/layout.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import '../widgets/reusable.dart';
+import '../main.dart'; // For supabase client
 
 class OpenSourcePage extends StatefulWidget {
   const OpenSourcePage({Key? key}) : super(key: key);
@@ -44,8 +44,9 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
             const SizedBox(height: 24),
             Text(
               "My contributions to open source projects and the developer community.",
-              style:
-                  Theme.of(context).textTheme.bodyLarge!.copyWith(height: 1.6),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge!.copyWith(height: 1.6),
             ),
             const SizedBox(height: 32),
             FutureBuilder<List<Map<String, dynamic>>>(
@@ -59,8 +60,10 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
                   return ErrorState(
                     message:
                         "Failed to load open source contributions. Please try again later.",
-                    onRetry: () =>
-                        setState(() => _opensourceFuture = _fetchOpenSource()),
+                    onRetry:
+                        () => setState(
+                          () => _opensourceFuture = _fetchOpenSource(),
+                        ),
                   );
                 }
 
@@ -74,8 +77,7 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
 
                 return ListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: repos.length,
                   itemBuilder: (context, index) {
                     final repo = repos[index];
@@ -84,8 +86,8 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
                       repoUrl: repo['repo_url'] ?? '',
                       description: repo['description'] ?? '',
                       contributions: repo['contributions'],
-                      tags: (repo['tags'] as List<dynamic>?)
-                              ?.cast<String>() ??
+                      tags:
+                          (repo['tags'] as List<dynamic>?)?.cast<String>() ??
                           [],
                     );
                   },
@@ -120,8 +122,7 @@ class OpenSourceCard extends StatelessWidget {
     return Card(
       color: Theme.of(context).colorScheme.surface,
       margin: const EdgeInsets.only(bottom: 24),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -130,8 +131,7 @@ class OpenSourceCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -143,8 +143,7 @@ class OpenSourceCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color:
-                            Theme.of(context).colorScheme.secondary,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                   ),
@@ -171,8 +170,7 @@ class OpenSourceCard extends StatelessWidget {
                   'My Contributions:',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color:
-                        Theme.of(context).colorScheme.onBackground,
+                    color: Theme.of(context).colorScheme.onBackground,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -188,26 +186,21 @@ class OpenSourceCard extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: tags
-                    .map(
-                      (tag) => Chip(
+                children:
+                    tags.map((tag) {
+                      return Chip(
                         label: Text(tag),
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.12),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.12),
                         labelStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontSize: 13,
                         ),
                         padding: EdgeInsets.zero,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                    .toList(),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
               ),
             ],
           ),

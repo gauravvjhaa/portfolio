@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SideNavigation extends StatelessWidget {
   final bool isMobile;
@@ -26,7 +26,7 @@ class SideNavigation extends StatelessWidget {
     return Container(
       width: isMobile ? double.infinity : 240,
       color: Theme.of(context).colorScheme.surface,
-      padding: const EdgeInsets.symmetric(vertical: 32.0),
+      padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -76,6 +76,7 @@ class SideNavigation extends StatelessWidget {
                                     context,
                                   ).pushReplacementNamed(item['route']!);
 
+                                  // Close drawer if on mobile
                                   if (isMobile) {
                                     Navigator.pop(context);
                                   }
@@ -104,7 +105,7 @@ class SocialLinks extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 18.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           SocialIcon(
             icon: Icons.email_outlined,
             url: 'mailto:gauravkumarjha306@gmail.com',
@@ -114,7 +115,10 @@ class SocialLinks extends StatelessWidget {
             icon: Icons.person,
             url: 'https://linkedin.com/in/gauravvjhaa',
           ),
-          // Facebook icon removed as requested
+          SocialIcon(
+            icon: Icons.facebook,
+            url: 'https://www.facebook.com/profile.php?id=61583634223446',
+          ),
         ],
       ),
     );
@@ -136,6 +140,35 @@ class SocialIcon extends StatelessWidget {
         launchUrl(Uri.parse(url));
       },
       hoverColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+    );
+  }
+}
+
+class SocialIconWithLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String url;
+
+  const SocialIconWithLabel({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.url,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      icon: Icon(icon),
+      label: Text(label),
+      onPressed: () {
+        launchUrl(Uri.parse(url));
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.secondary,
+        side: BorderSide(color: Theme.of(context).colorScheme.secondary),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
     );
   }
 }
