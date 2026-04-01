@@ -1,0 +1,20 @@
+name: Daily Supabase Ping
+
+on:
+  schedule:
+    # Runs at 08:00 UTC every day.
+    - cron: '0 8 * * *'
+  
+  # Allows you to trigger it manually from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Supabase API
+        run: |
+          curl -s -X GET 'https://dudwzfefssvxzckffvkx.supabase.co/rest/v1/skills?select=*&limit=1' \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1ZHd6ZmVmc3N2eHpja2Zmdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MzA3NzAsImV4cCI6MjA2NDEwNjc3MH0.27Uxc_yppQrDb-TEueQLDl2oOtSn81IjjzFk50rEljQ" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1ZHd6ZmVmc3N2eHpja2Zmdmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MzA3NzAsImV4cCI6MjA2NDEwNjc3MH0.27Uxc_yppQrDb-TEueQLDl2oOtSn81IjjzFk50rEljQ"
