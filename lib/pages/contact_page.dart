@@ -32,7 +32,7 @@ class _ContactPageState extends State<ContactPage> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://dudwzfefssvxzckffvkx.supabase.co/functions/v1/resend-email',
+          'https://dudwzfefssvxzckffvkx.supabase.co/functions/v1/send-message',
         ),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
