@@ -83,7 +83,9 @@ class _ContactPageState extends State<ContactPage> {
             const SizedBox(height: 24),
             Text(
               "Feel free to reach out to me with any questions or opportunities.",
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(height: 1.6),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge!.copyWith(height: 1.6),
             ),
             const SizedBox(height: 32),
             Responsive(
@@ -268,7 +270,7 @@ class _ContactPageState extends State<ContactPage> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: 'Name (Optional)',
                   labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.background,
@@ -281,9 +283,7 @@ class _ContactPageState extends State<ContactPage> {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
+                  // Name is now optional, so we return null (no error)
                   return null;
                 },
               ),
@@ -291,7 +291,7 @@ class _ContactPageState extends State<ContactPage> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Email (Optional)',
                   labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.background,
@@ -304,9 +304,10 @@ class _ContactPageState extends State<ContactPage> {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  } else if (!value.contains('@')) {
+                  // Only validate the email format if the user actually typed something
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      !value.contains('@')) {
                     return 'Please enter a valid email';
                   }
                   return null;
@@ -354,16 +355,17 @@ class _ContactPageState extends State<ContactPage> {
                     backgroundColor: Theme.of(context).colorScheme.secondary,
                     foregroundColor: Theme.of(context).colorScheme.background,
                   ),
-                  child: _isSubmitting
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: Theme.of(context).colorScheme.background,
-                          ),
-                        )
-                      : const Text('Send Message'),
+                  child:
+                      _isSubmitting
+                          ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: Theme.of(context).colorScheme.background,
+                            ),
+                          )
+                          : const Text('Send Message'),
                 ),
               ),
             ],
