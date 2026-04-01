@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import 'package:portfolio/widgets/layout.dart';
+import '../main.dart';
+import '../widgets/reusable.dart';
 
 class EducationPage extends StatefulWidget {
   const EducationPage({Key? key}) : super(key: key);
@@ -52,8 +52,10 @@ class _EducationPageState extends State<EducationPage> {
                   return ErrorState(
                     message:
                         "Failed to load education data. Please try again later.",
-                    onRetry: () => setState(
-                        () => _educationFuture = _fetchEducation()),
+                    onRetry:
+                        () => setState(
+                          () => _educationFuture = _fetchEducation(),
+                        ),
                   );
                 }
 
@@ -67,8 +69,7 @@ class _EducationPageState extends State<EducationPage> {
 
                 return ListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: education.length,
                   itemBuilder: (context, index) {
                     final edu = education[index];
@@ -123,30 +124,25 @@ class EducationCard extends StatelessWidget {
     return Card(
       color: Theme.of(context).colorScheme.surface,
       margin: const EdgeInsets.only(bottom: 24),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         degree,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).colorScheme.secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                       ),
                       Text(
@@ -154,31 +150,28 @@ class EducationCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onBackground,
+                          color: Theme.of(context).colorScheme.onBackground,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.15),
-                    borderRadius:
-                        BorderRadius.circular(20),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     yearText,
                     style: TextStyle(
                       fontSize: 14,
-                      color:
-                          Theme.of(context).colorScheme.secondary,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 ),
@@ -220,8 +213,7 @@ class EducationCard extends StatelessWidget {
                   Icon(
                     Icons.grade,
                     size: 16,
-                    color:
-                        Theme.of(context).colorScheme.secondary,
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                   const SizedBox(width: 4),
                   Text(

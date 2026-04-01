@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../constants.dart';
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import 'package:portfolio/widgets/layout.dart';
+import '../widgets/reusable.dart';
+import '../main.dart'; // For supabase client and storageUrl
 
 class GalleryPage extends StatefulWidget {
   const GalleryPage({Key? key}) : super(key: key);
@@ -24,16 +23,21 @@ class _GalleryPageState extends State<GalleryPage> {
 
   Future<List<Map<String, dynamic>>> _fetchGallery() async {
     try {
+      // Since we don't have a specific gallery table in our schema,
+      // we can either create one or simply list files from the gallery folder
       final response = await supabase.storage
           .from('portfolio-assets')
           .list(path: 'gallery');
 
+      // Convert storage objects to a normalized format
       return response
-          .map((file) => {
-                'name': file.name,
-                'url': '$storageUrl/gallery/${file.name}',
-                'created_at': file.createdAt,
-              })
+          .map(
+            (file) => {
+              'name': file.name,
+              'url': '$storageUrl/gallery/${file.name}',
+              'created_at': file.createdAt,
+            },
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to load gallery: $e');
@@ -59,17 +63,15 @@ class _GalleryPageState extends State<GalleryPage> {
                 const SizedBox(height: 24),
                 Text(
                   "A collection of images showcasing my work and experiences.",
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge!
-                      .copyWith(height: 1.6),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge!.copyWith(height: 1.6),
                 ),
                 const SizedBox(height: 32),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _galleryFuture,
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const LoadingState();
                     }
 
@@ -77,8 +79,10 @@ class _GalleryPageState extends State<GalleryPage> {
                       return ErrorState(
                         message:
                             "Failed to load gallery. Please try again later.",
-                        onRetry: () => setState(
-                            () => _galleryFuture = _fetchGallery()),
+                        onRetry:
+                            () => setState(
+                              () => _galleryFuture = _fetchGallery(),
+                            ),
                       );
                     }
 
@@ -94,42 +98,38 @@ class _GalleryPageState extends State<GalleryPage> {
                       mobile: GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
                         shrinkWrap: true,
-                        physics:
-                            const NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: images.length,
                         itemBuilder: (context, index) {
                           final image = images[index];
                           return GalleryImage(
                             imageUrl: image['url'],
                             title: image['name'],
-                            onTap: () =>
-                                _openImageViewer(image['url']),
+                            onTap: () => _openImageViewer(image['url']),
                           );
                         },
                       ),
                       desktop: GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                        ),
+                              crossAxisCount: 4,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
                         shrinkWrap: true,
-                        physics:
-                            const NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: images.length,
                         itemBuilder: (context, index) {
                           final image = images[index];
                           return GalleryImage(
                             imageUrl: image['url'],
                             title: image['name'],
-                            onTap: () =>
-                                _openImageViewer(image['url']),
+                            onTap: () => _openImageViewer(image['url']),
                           );
                         },
                       ),
@@ -140,6 +140,7 @@ class _GalleryPageState extends State<GalleryPage> {
             ),
           ),
         ),
+        // Full-screen image viewer
         if (_selectedImage != null)
           GestureDetector(
             onTap: () => setState(() => _selectedImage = null),
@@ -150,8 +151,7 @@ class _GalleryPageState extends State<GalleryPage> {
               child: Stack(
                 children: [
                   Center(
-                    child: Image.network(_selectedImage!,
-                        fit: BoxFit.contain),
+                    child: Image.network(_selectedImage!, fit: BoxFit.contain),
                   ),
                   Positioned(
                     top: 16,
@@ -162,8 +162,7 @@ class _GalleryPageState extends State<GalleryPage> {
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () =>
-                          setState(() => _selectedImage = null),
+                      onPressed: () => setState(() => _selectedImage = null),
                     ),
                   ),
                 ],
@@ -213,39 +212,34 @@ class _GalleryImageState extends State<GalleryImage> {
             ],
           ),
           child: ClipRRect(
-            borderRadius:
-                BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 Image.network(
                   widget.imageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withOpacity(0.1),
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 40,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary,
-                    ),
-                  ),
+                  errorBuilder:
+                      (context, error, stackTrace) => Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.1),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 40,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
                 ),
+                // Overlay on hover
                 AnimatedOpacity(
                   opacity: isHovered ? 1.0 : 0.0,
-                  duration:
-                      const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
-                        end:
-                            Alignment.bottomCenter,
+                        end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
                           Colors.black.withOpacity(0.7),
@@ -254,10 +248,8 @@ class _GalleryImageState extends State<GalleryImage> {
                     ),
                     padding: const EdgeInsets.all(12),
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.end,
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (widget.title != null)
                           Text(
@@ -266,15 +258,13 @@ class _GalleryImageState extends State<GalleryImage> {
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
-                            overflow:
-                                TextOverflow.ellipsis,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         const SizedBox(height: 4),
                         Row(
-                          children: const [
-                            Icon(Icons.zoom_in,
-                                color: Colors.white, size: 16),
-                            SizedBox(width: 4),
+                          children: [
+                            Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
                             Text(
                               'Click to enlarge',
                               style: TextStyle(

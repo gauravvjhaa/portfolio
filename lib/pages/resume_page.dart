@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:portfolio/widgets/layout.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:html' as html;
-
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import '../widgets/reusable.dart';
 
 class ResumePage extends StatefulWidget {
   const ResumePage({Key? key}) : super(key: key);
@@ -22,10 +23,11 @@ class _ResumePageState extends State<ResumePage> {
 
   Future<List<Map<String, dynamic>>> _fetchResumes() async {
     try {
-      final response = await supabase
+      final response = await Supabase.instance.client
           .from('resume')
           .select()
           .order('uploaded_at', ascending: false);
+      // Ensure response is List<Map<String, dynamic>>
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw Exception('Failed to load resumes: $e');
@@ -34,6 +36,7 @@ class _ResumePageState extends State<ResumePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Use LayoutBuilder to avoid overflows and adapt to screen size
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -63,8 +66,10 @@ class _ResumePageState extends State<ResumePage> {
                             return ErrorState(
                               message:
                                   "Failed to load resumes. Please try again later.",
-                              onRetry: () => setState(
-                                  () => _resumesFuture = _fetchResumes()),
+                              onRetry:
+                                  () => setState(
+                                    () => _resumesFuture = _fetchResumes(),
+                                  ),
                             );
                           }
 
@@ -81,10 +86,9 @@ class _ResumePageState extends State<ResumePage> {
                             children: [
                               Text(
                                 "You can view and download all my resumes below.",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(height: 1.6),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.copyWith(height: 1.6),
                               ),
                               const SizedBox(height: 32),
                               ...resumes.map((resume) {
@@ -92,24 +96,20 @@ class _ResumePageState extends State<ResumePage> {
                                 final resumeUrl =
                                     fileUrl.startsWith('http')
                                         ? fileUrl
-                                        : fileUrl;
-                                final description =
-                                    resume['description'] ?? '';
+                                        : fileUrl; // Adjust if you use a storageUrl
+                                final description = resume['description'] ?? '';
                                 final uploadedAt =
                                     resume['uploaded_at'] != null
                                         ? DateTime.tryParse(
-                                            resume['uploaded_at']
-                                                .toString(),
-                                          )
+                                          resume['uploaded_at'].toString(),
+                                        )
                                         : null;
 
                                 return Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 40),
+                                  padding: const EdgeInsets.only(bottom: 40),
                                   child: Center(
                                     child: Container(
-                                      constraints:
-                                          const BoxConstraints(
+                                      constraints: const BoxConstraints(
                                         maxWidth: 600,
                                       ),
                                       padding: const EdgeInsets.symmetric(
@@ -121,8 +121,7 @@ class _ResumePageState extends State<ResumePage> {
                                             .colorScheme
                                             .surfaceVariant
                                             .withOpacity(0.15),
-                                        borderRadius:
-                                            BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -139,34 +138,34 @@ class _ResumePageState extends State<ResumePage> {
                                           Icon(
                                             Icons.description_outlined,
                                             size: 80,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary,
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.secondary,
                                           ),
                                           const SizedBox(height: 24),
                                           Text(
                                             "Resume",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineSmall
-                                                ?.copyWith(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onBackground,
-                                                  fontWeight:
-                                                      FontWeight.bold,
-                                                ),
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.headlineSmall?.copyWith(
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.onBackground,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                           if (description.isNotEmpty) ...[
                                             const SizedBox(height: 16),
                                             Text(
                                               description,
-                                              textAlign:
-                                                  TextAlign.center,
+                                              textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
+                                                color:
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.onSurface,
                                               ),
                                             ),
                                           ],
@@ -186,67 +185,70 @@ class _ResumePageState extends State<ResumePage> {
                                           const SizedBox(height: 24),
                                           Wrap(
                                             spacing: 16,
-                                            alignment:
-                                                WrapAlignment.center,
+                                            alignment: WrapAlignment.center,
                                             children: [
                                               ElevatedButton.icon(
                                                 icon: const Icon(
-                                                    Icons.visibility),
+                                                  Icons.visibility,
+                                                ),
                                                 label: const Text(
-                                                    'View Resume'),
+                                                  'View Resume',
+                                                ),
                                                 onPressed: () {
                                                   html.window.open(
-                                                      resumeUrl,
-                                                      'Resume');
+                                                    resumeUrl,
+                                                    'Resume',
+                                                  );
                                                 },
-                                                style: ElevatedButton
-                                                    .styleFrom(
+                                                style: ElevatedButton.styleFrom(
                                                   backgroundColor:
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .secondary,
+                                                      Theme.of(
+                                                        context,
+                                                      ).colorScheme.secondary,
                                                   foregroundColor:
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .surface,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 24,
-                                                    vertical: 16,
-                                                  ),
+                                                      Theme.of(
+                                                        context,
+                                                      ).colorScheme.surface,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 24,
+                                                        vertical: 16,
+                                                      ),
                                                 ),
                                               ),
                                               OutlinedButton.icon(
                                                 icon: const Icon(
-                                                    Icons.download),
+                                                  Icons.download,
+                                                ),
                                                 label: const Text(
-                                                    'Download PDF'),
+                                                  'Download PDF',
+                                                ),
                                                 onPressed: () {
                                                   html.AnchorElement(
-                                                    href: resumeUrl,
-                                                  )
+                                                      href: resumeUrl,
+                                                    )
                                                     ..setAttribute(
                                                       'download',
                                                       'Gaurav_Jha_Resume.pdf',
                                                     )
                                                     ..click();
                                                 },
-                                                style: OutlinedButton
-                                                    .styleFrom(
+                                                style: OutlinedButton.styleFrom(
                                                   foregroundColor:
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .secondary,
+                                                      Theme.of(
+                                                        context,
+                                                      ).colorScheme.secondary,
                                                   side: BorderSide(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .secondary,
+                                                    color:
+                                                        Theme.of(
+                                                          context,
+                                                        ).colorScheme.secondary,
                                                   ),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 24,
-                                                    vertical: 16,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 24,
+                                                        vertical: 16,
+                                                      ),
                                                 ),
                                               ),
                                             ],

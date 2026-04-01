@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SideNavigation extends StatelessWidget {
   final bool isMobile;
@@ -45,48 +45,37 @@ class SideNavigation extends StatelessWidget {
           const SizedBox(height: 36),
           Expanded(
             child: ListView(
-              children:
-                  navItems
-                      .map(
-                        (item) => ListTile(
-                              title: Text(
-                                item['title']!,
-                                style: TextStyle(
-                                  color:
-                                      ModalRoute.of(context)?.settings.name ==
-                                              item['route']
-                                          ? Theme.of(
-                                            context,
-                                          ).colorScheme.secondary
-                                          : Theme.of(
-                                            context,
-                                          ).colorScheme.onBackground,
-                                  fontWeight:
-                                      ModalRoute.of(context)?.settings.name ==
-                                              item['route']
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              onTap: () {
-                                if (ModalRoute.of(context)?.settings.name !=
-                                    item['route']) {
-                                  Navigator.of(
-                                    context,
-                                  ).pushReplacementNamed(item['route']!);
+              children: navItems
+                  .map(
+                    (item) => ListTile(
+                      title: Text(
+                        item['title']!,
+                        style: TextStyle(
+                          color: ModalRoute.of(context)?.settings.name == item['route']
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(context).colorScheme.onBackground,
+                          fontWeight: ModalRoute.of(context)?.settings.name == item['route']
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                      ),
+                      onTap: () {
+                        if (ModalRoute.of(context)?.settings.name != item['route']) {
+                          Navigator.of(context).pushReplacementNamed(item['route']!);
 
-                                  if (isMobile) {
-                                    Navigator.pop(context);
-                                  }
-                                }
-                              },
-                            )
-                            .animate()
-                            .fadeIn(duration: 350.ms)
-                            .slideX(begin: -0.1, end: 0, curve: Curves.easeOut),
-                      )
-                      .toList(),
+                          // Close drawer if on mobile
+                          if (isMobile) {
+                            Navigator.pop(context);
+                          }
+                        }
+                      },
+                    )
+                        .animate()
+                        .fadeIn(duration: 350.ms)
+                        .slideX(begin: -0.1, end: 0, curve: Curves.easeOut),
+                  )
+                  .toList(),
             ),
           ),
           const SocialLinks(),
@@ -104,7 +93,7 @@ class SocialLinks extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 18.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           SocialIcon(
             icon: Icons.email_outlined,
             url: 'mailto:gauravkumarjha306@gmail.com',
@@ -114,7 +103,7 @@ class SocialLinks extends StatelessWidget {
             icon: Icons.person,
             url: 'https://linkedin.com/in/gauravvjhaa',
           ),
-          // Facebook icon removed as requested
+          SocialIcon(icon: Icons.facebook, url: 'https://facebook.com'),
         ],
       ),
     );
@@ -126,7 +115,7 @@ class SocialIcon extends StatelessWidget {
   final String url;
 
   const SocialIcon({Key? key, required this.icon, required this.url})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +125,35 @@ class SocialIcon extends StatelessWidget {
         launchUrl(Uri.parse(url));
       },
       hoverColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+    );
+  }
+}
+
+class SocialIconWithLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String url;
+
+  const SocialIconWithLabel({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.url,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      icon: Icon(icon),
+      label: Text(label),
+      onPressed: () {
+        launchUrl(Uri.parse(url));
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.secondary,
+        side: BorderSide(color: Theme.of(context).colorScheme.secondary),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
     );
   }
 }

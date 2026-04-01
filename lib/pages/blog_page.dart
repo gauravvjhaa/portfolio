@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../constants.dart';
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:intl/intl.dart';
+import 'package:portfolio/widgets/layout.dart';
+import '../main.dart';
+import '../widgets/reusable.dart';
 
 class BlogPage extends StatefulWidget {
   const BlogPage({Key? key}) : super(key: key);
@@ -47,8 +46,9 @@ class _BlogPageState extends State<BlogPage> {
             const SizedBox(height: 24),
             Text(
               "Welcome to my blog! Here you'll find posts about my journey, tips, and technical deep-dives.",
-              style:
-                  Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(height: 1.6),
             ),
             const SizedBox(height: 32),
             FutureBuilder<List<Map<String, dynamic>>>(
@@ -62,8 +62,7 @@ class _BlogPageState extends State<BlogPage> {
                   return ErrorState(
                     message:
                         "Failed to load blog posts. Please try again later.",
-                    onRetry: () => setState(
-                        () => _blogsFuture = _fetchBlogs()),
+                    onRetry: () => setState(() => _blogsFuture = _fetchBlogs()),
                   );
                 }
 
@@ -77,8 +76,7 @@ class _BlogPageState extends State<BlogPage> {
 
                 return ListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: blogs.length,
                   itemBuilder: (context, index) {
                     final blog = blogs[index];
@@ -87,11 +85,12 @@ class _BlogPageState extends State<BlogPage> {
                       slug: blog['slug'] ?? '',
                       summary: blog['summary'] ?? '',
                       content: blog['content'] ?? '',
-                      publishedAt: blog['published_at'] != null
-                          ? DateTime.parse(blog['published_at'])
-                          : DateTime.now(),
-                      tags: (blog['tags'] as List<dynamic>?)
-                              ?.cast<String>() ??
+                      publishedAt:
+                          blog['published_at'] != null
+                              ? DateTime.parse(blog['published_at'])
+                              : DateTime.now(),
+                      tags:
+                          (blog['tags'] as List<dynamic>?)?.cast<String>() ??
                           [],
                       coverImage: blog['cover_image_url'],
                     );
@@ -141,17 +140,17 @@ class _BlogPostCardState extends State<BlogPostCard> {
   @override
   Widget build(BuildContext context) {
     final hasImage = widget.coverImage != null && widget.coverImage!.isNotEmpty;
-    final imageUrl = hasImage
-        ? (widget.coverImage!.startsWith('http')
-            ? widget.coverImage!
-            : '$storageUrl/blog/${widget.coverImage}')
-        : null;
+    final imageUrl =
+        hasImage
+            ? (widget.coverImage!.startsWith('http')
+                ? widget.coverImage!
+                : '$storageUrl/blog/${widget.coverImage}')
+            : null;
 
     return Card(
       color: Theme.of(context).colorScheme.surface,
       margin: const EdgeInsets.only(bottom: 24),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -162,8 +161,7 @@ class _BlogPostCardState extends State<BlogPostCard> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (imageUrl != null) ...[
                 ClipRRect(
@@ -173,20 +171,19 @@ class _BlogPostCardState extends State<BlogPostCard> {
                     height: 240,
                     width: double.infinity,
                     fit: BoxFit.fitHeight,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 160,
-                      width: double.infinity,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.1),
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 40,
-                        color:
-                            Theme.of(context).colorScheme.secondary,
-                      ),
-                    ),
+                    errorBuilder:
+                        (context, error, stackTrace) => Container(
+                          height: 160,
+                          width: double.infinity,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withOpacity(0.1),
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -196,15 +193,10 @@ class _BlogPostCardState extends State<BlogPostCard> {
                   Expanded(
                     child: Text(
                       widget.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onBackground,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onBackground,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -262,10 +254,8 @@ class _BlogPostCardState extends State<BlogPostCard> {
                       fontWeight: FontWeight.bold,
                     ),
                     code: TextStyle(
-                      backgroundColor:
-                          Theme.of(context).colorScheme.background,
-                      color:
-                          Theme.of(context).colorScheme.secondary,
+                      backgroundColor: Theme.of(context).colorScheme.background,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontFamily: 'monospace',
                     ),
                     codeblockDecoration: BoxDecoration(
@@ -279,26 +269,21 @@ class _BlogPostCardState extends State<BlogPostCard> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: widget.tags
-                    .map(
-                      (tag) => Chip(
+                children:
+                    widget.tags.map((tag) {
+                      return Chip(
                         label: Text(tag),
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.12),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.12),
                         labelStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontSize: 13,
                         ),
                         padding: EdgeInsets.zero,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                    .toList(),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
               ),
             ],
           ),

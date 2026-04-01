@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import '../supabase_client.dart';
-import '../widgets/components.dart';
+import 'package:intl/intl.dart';
+import '../main.dart'; // For supabase client
+import '../widgets/layout.dart';
+import '../widgets/reusable.dart';
 
 class ExperiencePage extends StatefulWidget {
   const ExperiencePage({Key? key}) : super(key: key);
@@ -51,10 +51,8 @@ class _ExperiencePageState extends State<ExperiencePage> {
 
                 if (snapshot.hasError) {
                   return ErrorState(
-                    message:
-                        "Failed to load experience data. Please try again later.",
-                    onRetry: () => setState(
-                        () => _experienceFuture = _fetchExperience()),
+                    message: "Failed to load experience data. Please try again later.",
+                    onRetry: () => setState(() => _experienceFuture = _fetchExperience()),
                   );
                 }
 
@@ -68,8 +66,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
 
                 return ListView.builder(
                   shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: experiences.length,
                   itemBuilder: (context, index) {
                     final exp = experiences[index];
@@ -81,9 +78,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                       startDate: exp['start_date'] != null
                           ? DateTime.parse(exp['start_date'])
                           : null,
-                      endDate: exp['end_date'] != null
-                          ? DateTime.parse(exp['end_date'])
-                          : null,
+                      endDate: exp['end_date'] != null ? DateTime.parse(exp['end_date']) : null,
                       isCurrent: exp['is_current'] ?? false,
                     );
                   },
@@ -128,30 +123,25 @@ class ExperienceCard extends StatelessWidget {
     return Card(
       color: Theme.of(context).colorScheme.surface,
       margin: const EdgeInsets.only(bottom: 24),
-      shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).colorScheme.secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                       ),
                       Text(
@@ -159,9 +149,7 @@ class ExperienceCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onBackground,
+                          color: Theme.of(context).colorScheme.onBackground,
                         ),
                       ),
                     ],
@@ -175,22 +163,14 @@ class ExperienceCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isCurrent
                         ? Colors.green.withOpacity(0.2)
-                        : Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.15),
-                    borderRadius:
-                        BorderRadius.circular(20),
+                        : Theme.of(context).colorScheme.secondary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '${_formatDate(startDate)} - ${isCurrent ? 'Present' : _formatDate(endDate)}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isCurrent
-                          ? Colors.green
-                          : Theme.of(context)
-                              .colorScheme
-                              .secondary,
+                      color: isCurrent ? Colors.green : Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 ),
