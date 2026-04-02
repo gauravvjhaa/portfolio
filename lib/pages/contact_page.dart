@@ -129,7 +129,7 @@ class _ContactPageState extends State<ContactPage> {
           context,
           Icons.email,
           "Email",
-          "gauravkumarjha306@cic.du.ac.in",
+          "gauravkumarjha306@gmail.com",
         ),
         _buildContactItem(context, Icons.phone, "Phone", "+91 9354897359"),
         _buildContactItem(
