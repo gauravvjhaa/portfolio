@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:portfolio/pages/admin/admin_page.dart';
 import 'widgets/layout.dart';
 import 'pages/home_page.dart';
 import 'pages/about_page.dart';
@@ -21,7 +20,7 @@ class PortfolioApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gaurav Jha | Portfolio',
+      title: 'Welcome to my portfolio website',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF0A192F),
@@ -39,6 +38,7 @@ class PortfolioApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         final routeName = settings.name?.replaceAll('/', '');
         Widget page;
+
         switch (routeName) {
           case 'about':
             page = const AboutPage();
@@ -73,24 +73,35 @@ class PortfolioApp extends StatelessWidget {
           case 'opensource':
             page = const OpenSourcePage();
             break;
-          case 'admin':
-            final args =
-                settings.arguments as Map<String, dynamic>?; // <-- add this
-            final token = args?['token'] as String?;
-            print('Admin token: $token'); // <-- debug print
-            page = AdminPage(token: token!); // <-- pass token
-            break;
           case 'home':
           default:
             page = const HomePage();
         }
+
         return PageRouteBuilder(
           settings: settings,
           pageBuilder: (_, __, ___) => PortfolioPage(child: page),
-          transitionDuration: const Duration(milliseconds: 400),
-          transitionsBuilder:
-              (_, animation, __, child) =>
-                  FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 550),
+          reverseTransitionDuration: const Duration(milliseconds: 420),
+          transitionsBuilder: (_, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+
+            final fade = Tween<double>(begin: 0.0, end: 1.0).animate(curved);
+
+            final slide = Tween<Offset>(
+              begin: const Offset(0, 0.02), // subtle upward settle
+              end: Offset.zero,
+            ).animate(curved);
+
+            return FadeTransition(
+              opacity: fade,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
         );
       },
     );
