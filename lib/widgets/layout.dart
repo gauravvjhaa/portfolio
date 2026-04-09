@@ -45,7 +45,7 @@ class MobileLayout extends StatelessWidget {
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         title: Text(
-          'GAURAV JHA',
+          'Welcome!',
           style: TextStyle(
             color: Theme.of(context).colorScheme.secondary,
             fontWeight: FontWeight.bold,
@@ -70,7 +70,7 @@ class Responsive extends StatelessWidget {
   final Widget mobile;
   final Widget desktop;
   const Responsive({Key? key, required this.mobile, required this.desktop})
-      : super(key: key);
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +89,7 @@ class Responsive extends StatelessWidget {
 class AnimatedContentContainer extends StatelessWidget {
   final Widget child;
   const AnimatedContentContainer({Key? key, required this.child})
-      : super(key: key);
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {

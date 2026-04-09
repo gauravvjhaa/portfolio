@@ -8,6 +8,7 @@ import 'pages/skills_page.dart';
 import 'pages/experience_page.dart';
 import 'pages/education_page.dart';
 import 'pages/blog_page.dart';
+import 'pages/blog_details.dart';
 import 'pages/contact_page.dart';
 import 'pages/certifications_page.dart';
 import 'pages/gallery_page.dart';
@@ -20,7 +21,7 @@ class PortfolioApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Welcome to my portfolio website',
+      title: 'Gaurav Jha | Portfolio',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF0A192F),
@@ -36,46 +37,67 @@ class PortfolioApp extends StatelessWidget {
       ),
       initialRoute: '/home',
       onGenerateRoute: (settings) {
-        final routeName = settings.name?.replaceAll('/', '');
+        final fullRoute = settings.name ?? '/home';
+        final clean =
+            fullRoute.startsWith('/') ? fullRoute.substring(1) : fullRoute;
+
         Widget page;
 
-        switch (routeName) {
-          case 'about':
-            page = const AboutPage();
-            break;
-          case 'projects':
-            page = const ProjectsPage();
-            break;
-          case 'skills':
-            page = const SkillsPage();
-            break;
-          case 'experience':
-            page = const ExperiencePage();
-            break;
-          case 'education':
-            page = const EducationPage();
-            break;
-          case 'blog':
+        // /blog/<slug>
+        if (clean.startsWith('blog/')) {
+          final slug = clean.replaceFirst('blog/', '').trim();
+
+          // If slug is empty, fallback to blog listing.
+          if (slug.isEmpty) {
             page = const BlogPage();
-            break;
-          case 'contact':
-            page = const ContactPage();
-            break;
-          case 'certifications':
-            page = const CertificationsPage();
-            break;
-          case 'gallery':
-            page = const GalleryPage();
-            break;
-          case 'resume':
-            page = const ResumePage();
-            break;
-          case 'opensource':
-            page = const OpenSourcePage();
-            break;
-          case 'home':
-          default:
-            page = const HomePage();
+          } else {
+            final args = settings.arguments;
+            page = BlogDetailsPage(
+              slug: slug,
+              initialBlog: args is Map<String, dynamic> ? args : null,
+            );
+          }
+        } else {
+          switch (clean) {
+            case 'blog':
+              page = const BlogPage();
+              break;
+
+            // other routes...
+            case 'about':
+              page = const AboutPage();
+              break;
+            case 'projects':
+              page = const ProjectsPage();
+              break;
+            case 'skills':
+              page = const SkillsPage();
+              break;
+            case 'experience':
+              page = const ExperiencePage();
+              break;
+            case 'education':
+              page = const EducationPage();
+              break;
+            case 'contact':
+              page = const ContactPage();
+              break;
+            case 'certifications':
+              page = const CertificationsPage();
+              break;
+            case 'gallery':
+              page = const GalleryPage();
+              break;
+            case 'resume':
+              page = const ResumePage();
+              break;
+            case 'opensource':
+              page = const OpenSourcePage();
+              break;
+            case 'home':
+            default:
+              page = const HomePage();
+          }
         }
 
         return PageRouteBuilder(
@@ -91,9 +113,8 @@ class PortfolioApp extends StatelessWidget {
             );
 
             final fade = Tween<double>(begin: 0.0, end: 1.0).animate(curved);
-
             final slide = Tween<Offset>(
-              begin: const Offset(0, 0.02), // subtle upward settle
+              begin: const Offset(0, 0.02),
               end: Offset.zero,
             ).animate(curved);
 

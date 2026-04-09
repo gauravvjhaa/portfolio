@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
-import 'package:portfolio/widgets/layout.dart';
 import '../main.dart';
 import '../widgets/reusable.dart';
+
+enum TimeFilter { all, last7Days, last30Days, thisYear }
 
 class BlogPage extends StatefulWidget {
   const BlogPage({Key? key}) : super(key: key);
@@ -15,11 +16,34 @@ class BlogPage extends StatefulWidget {
 
 class _BlogPageState extends State<BlogPage> {
   late Future<List<Map<String, dynamic>>> _blogsFuture;
+  final TextEditingController _searchController = TextEditingController();
+
+  String _searchQuery = '';
+  TimeFilter _timeFilter = TimeFilter.all;
+  String? _selectedTag;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _blogsFuture = _fetchBlogs();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      setState(() => _searchQuery = _searchController.text.trim());
+    });
   }
 
   Future<List<Map<String, dynamic>>> _fetchBlogs() async {
@@ -35,260 +59,599 @@ class _BlogPageState extends State<BlogPage> {
     }
   }
 
+  DateTime _parseDate(dynamic value) {
+    try {
+      return DateTime.parse(value.toString());
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
+  int _estimateReadMinutes(String text) {
+    final words =
+        text.trim().isEmpty ? 0 : text.trim().split(RegExp(r'\s+')).length;
+    return ((words / 200).ceil()).clamp(1, 99);
+  }
+
+  DateTime? _timeFilterStart(TimeFilter filter) {
+    final now = DateTime.now();
+    switch (filter) {
+      case TimeFilter.all:
+        return null;
+      case TimeFilter.last7Days:
+        return now.subtract(const Duration(days: 7));
+      case TimeFilter.last30Days:
+        return now.subtract(const Duration(days: 30));
+      case TimeFilter.thisYear:
+        return DateTime(now.year, 1, 1);
+    }
+  }
+
+  List<String> _extractTags(List<Map<String, dynamic>> blogs) {
+    final set = <String>{};
+    for (final blog in blogs) {
+      final tags = (blog['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+      set.addAll(tags.map((e) => e.trim()).where((e) => e.isNotEmpty));
+    }
+    final list =
+        set.toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return list;
+  }
+
+  List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> blogs) {
+    final start = _timeFilterStart(_timeFilter);
+    final q = _searchQuery.toLowerCase();
+
+    return blogs.where((blog) {
+      final publishedAt = _parseDate(blog['published_at']);
+      final title = (blog['title'] ?? '').toString().toLowerCase();
+      final summary = (blog['summary'] ?? '').toString().toLowerCase();
+      final content = (blog['content'] ?? '').toString().toLowerCase();
+      final tags = (blog['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+      final tagsString = tags.join(' ').toLowerCase();
+
+      final matchesSearch =
+          q.isEmpty ||
+          title.contains(q) ||
+          summary.contains(q) ||
+          content.contains(q) ||
+          tagsString.contains(q);
+
+      final matchesTime = start == null || !publishedAt.isBefore(start);
+      final matchesTag = _selectedTag == null || tags.contains(_selectedTag);
+
+      return matchesSearch && matchesTime && matchesTag;
+    }).toList();
+  }
+
+  int _gridColumns(double width) {
+    if (width >= 1500) return 4;
+    if (width >= 1100) return 3;
+    if (width >= 700) return 2;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: AnimatedContentContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SectionTitle('Blog'),
-            const SizedBox(height: 24),
-            Text(
-              "Welcome to my blog! Here you'll find posts about my journey, tips, and technical deep-dives.",
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(height: 1.6),
+    final cs = Theme.of(context).colorScheme;
+
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _blogsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoadingState();
+        }
+        if (snapshot.hasError) {
+          return ErrorState(
+            message: "Failed to load blog posts. Please try again later.",
+            onRetry: () => setState(() => _blogsFuture = _fetchBlogs()),
+          );
+        }
+
+        final allBlogs = snapshot.data ?? [];
+        if (allBlogs.isEmpty) {
+          return const EmptyState(
+            message: "No blog posts yet. Come back soon!",
+          );
+        }
+
+        final tags = _extractTags(allBlogs);
+        final blogs = _applyFilters(allBlogs);
+
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 8),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                delegate: _SearchHeaderDelegate(
+                  height: 92,
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildTopSearchBar(context, cs),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 32),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _blogsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState();
-                }
-
-                if (snapshot.hasError) {
-                  return ErrorState(
-                    message:
-                        "Failed to load blog posts. Please try again later.",
-                    onRetry: () => setState(() => _blogsFuture = _fetchBlogs()),
-                  );
-                }
-
-                final blogs = snapshot.data ?? [];
-
-                if (blogs.isEmpty) {
-                  return const EmptyState(
-                    message: "No blog posts yet. Come back soon!",
-                  );
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: blogs.length,
-                  itemBuilder: (context, index) {
-                    final blog = blogs[index];
-                    return BlogPostCard(
-                      title: blog['title'] ?? '',
-                      slug: blog['slug'] ?? '',
-                      summary: blog['summary'] ?? '',
-                      content: blog['content'] ?? '',
-                      publishedAt:
-                          blog['published_at'] != null
-                              ? DateTime.parse(blog['published_at'])
-                              : DateTime.now(),
-                      tags:
-                          (blog['tags'] as List<dynamic>?)?.cast<String>() ??
-                          [],
-                      coverImage: blog['cover_image_url'],
-                    );
-                  },
-                );
-              },
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  '${blogs.length} post${blogs.length == 1 ? '' : 's'}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.secondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ),
+            if (tags.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _TagPill(
+                          label: 'All tags',
+                          selected: _selectedTag == null,
+                          onTap: () => setState(() => _selectedTag = null),
+                        ),
+                        const SizedBox(width: 8),
+                        ...tags.map(
+                          (tag) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _TagPill(
+                              label: tag,
+                              selected: _selectedTag == tag,
+                              onTap: () => setState(() => _selectedTag = tag),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (blogs.isEmpty)
+              const SliverToBoxAdapter(
+                child: EmptyState(message: "No blogs match current filters."),
+              )
+            else
+              SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final cols = _gridColumns(constraints.crossAxisExtent);
+                  return SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: cols,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: cols == 1 ? 1.50 : 1.06,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, i) {
+                      final blog = blogs[i];
+                      return BlogGridCard(
+                        title: (blog['title'] ?? '').toString(),
+                        content: (blog['content'] ?? '').toString(),
+                        publishedAt: _parseDate(blog['published_at']),
+                        coverImage: blog['cover_image_url']?.toString(),
+                        readMins: _estimateReadMinutes(
+                          (blog['content'] ?? '').toString(),
+                        ),
+                        onTap: () {
+                          final slug = (blog['slug'] ?? '').toString().trim();
+                          if (slug.isEmpty) return;
+
+                          Navigator.of(
+                            context,
+                          ).pushNamed('/blog/$slug', arguments: blog);
+                        },
+                      );
+                    }, childCount: blogs.length),
+                  );
+                },
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTopSearchBar(BuildContext context, ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cs.surface.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.outline.withOpacity(0.18)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 900;
+
+          final searchField = TextField(
+            controller: _searchController,
+            style: TextStyle(color: cs.onSurface),
+            decoration: InputDecoration(
+              hintText: 'Search blogs...',
+              hintStyle: TextStyle(color: cs.onSurface.withOpacity(0.6)),
+              prefixIcon: Icon(Icons.search_rounded, color: cs.secondary),
+              suffixIcon:
+                  _searchQuery.isNotEmpty
+                      ? IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      )
+                      : null,
+              filled: true,
+              fillColor: cs.background.withOpacity(0.45),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.secondary.withOpacity(0.6)),
+              ),
+              isDense: true,
+            ),
+          );
+
+          final chips = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _TimeChip(
+                  label: 'All',
+                  selected: _timeFilter == TimeFilter.all,
+                  onTap: () => setState(() => _timeFilter = TimeFilter.all),
+                ),
+                const SizedBox(width: 8),
+                _TimeChip(
+                  label: '7 days',
+                  selected: _timeFilter == TimeFilter.last7Days,
+                  onTap:
+                      () => setState(() => _timeFilter = TimeFilter.last7Days),
+                ),
+                const SizedBox(width: 8),
+                _TimeChip(
+                  label: '30 days',
+                  selected: _timeFilter == TimeFilter.last30Days,
+                  onTap:
+                      () => setState(() => _timeFilter = TimeFilter.last30Days),
+                ),
+                const SizedBox(width: 8),
+                _TimeChip(
+                  label: 'This year',
+                  selected: _timeFilter == TimeFilter.thisYear,
+                  onTap:
+                      () => setState(() => _timeFilter = TimeFilter.thisYear),
+                ),
+              ],
+            ),
+          );
+
+          if (isWide) {
+            return Row(
+              children: [
+                Expanded(flex: 6, child: searchField),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 4,
+                  child: Align(alignment: Alignment.centerRight, child: chips),
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [searchField, const SizedBox(height: 10), chips],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SearchHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double height;
+  final Widget child;
+  _SearchHeaderDelegate({required this.height, required this.child});
+
+  @override
+  double get minExtent => height;
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _SearchHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
+  }
+}
+
+class BlogGridCard extends StatelessWidget {
+  final String title;
+  final String content;
+  final DateTime publishedAt;
+  final String? coverImage;
+  final int readMins;
+  final VoidCallback onTap;
+
+  const BlogGridCard({
+    Key? key,
+    required this.title,
+    required this.content,
+    required this.publishedAt,
+    required this.coverImage,
+    required this.readMins,
+    required this.onTap,
+  }) : super(key: key);
+
+  String _formatDate(DateTime date) => DateFormat('MMM d, yyyy').format(date);
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final hasImage = coverImage != null && coverImage!.trim().isNotEmpty;
+    final imageUrl =
+        hasImage
+            ? (coverImage!.startsWith('http')
+                ? coverImage!
+                : '$storageUrl/blog/${coverImage!}')
+            : null;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.outline.withOpacity(0.15)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child:
+                    imageUrl == null
+                        ? Container(
+                          color: cs.background.withOpacity(0.3),
+                          child: Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: cs.secondary,
+                              size: 36,
+                            ),
+                          ),
+                        )
+                        : _AdaptiveCoverImage(imageUrl: imageUrl),
+              ),
+              Container(
+                color: cs.surface.withOpacity(0.98),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: cs.onBackground, // readable now
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 14,
+                          color: cs.secondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _formatDate(publishedAt),
+                            style: TextStyle(
+                              color: cs.secondary,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 14,
+                          color: cs.secondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$readMins min',
+                          style: TextStyle(
+                            color: cs.secondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 350.ms, delay: 40.ms);
+  }
+}
+
+class _AdaptiveCoverImage extends StatefulWidget {
+  final String imageUrl;
+  const _AdaptiveCoverImage({required this.imageUrl});
+
+  @override
+  State<_AdaptiveCoverImage> createState() => _AdaptiveCoverImageState();
+}
+
+class _AdaptiveCoverImageState extends State<_AdaptiveCoverImage> {
+  double? _ratio;
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = NetworkImage(widget.imageUrl);
+    final stream = provider.resolve(const ImageConfiguration());
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (ImageInfo info, bool _) {
+        if (mounted)
+          setState(() => _ratio = info.image.width / info.image.height);
+        stream.removeListener(listener);
+      },
+      onError: (_, __) {
+        if (mounted) setState(() => _error = true);
+        stream.removeListener(listener);
+      },
+    );
+    stream.addListener(listener);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (_error) {
+      return Center(
+        child: Icon(Icons.broken_image_rounded, color: cs.secondary, size: 34),
+      );
+    }
+
+    final isExtreme = _ratio != null && (_ratio! > 2.2 || _ratio! < 0.7);
+    return Container(
+      color: cs.background.withOpacity(0.2),
+      child: Image.network(
+        widget.imageUrl,
+        fit: isExtreme ? BoxFit.contain : BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        filterQuality: FilterQuality.medium,
+      ),
+    );
+  }
+}
+
+class _TimeChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _TimeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(40),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color:
+              selected
+                  ? cs.secondary.withOpacity(0.18)
+                  : cs.background.withOpacity(0.35),
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(
+            color:
+                selected
+                    ? cs.secondary.withOpacity(0.55)
+                    : cs.outline.withOpacity(0.22),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? cs.secondary : cs.onSurface.withOpacity(0.9),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 }
 
-class BlogPostCard extends StatefulWidget {
-  final String title;
-  final String slug;
-  final String summary;
-  final String content;
-  final DateTime publishedAt;
-  final List<String> tags;
-  final String? coverImage;
-
-  const BlogPostCard({
-    Key? key,
-    required this.title,
-    required this.slug,
-    required this.summary,
-    required this.content,
-    required this.publishedAt,
-    required this.tags,
-    this.coverImage,
-  }) : super(key: key);
-
-  @override
-  State<BlogPostCard> createState() => _BlogPostCardState();
-}
-
-class _BlogPostCardState extends State<BlogPostCard> {
-  bool _expanded = false;
-
-  String _formatDate(DateTime date) {
-    final formatter = DateFormat('MMM d, yyyy');
-    return formatter.format(date);
-  }
+class _TagPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _TagPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = widget.coverImage != null && widget.coverImage!.isNotEmpty;
-    final imageUrl =
-        hasImage
-            ? (widget.coverImage!.startsWith('http')
-                ? widget.coverImage!
-                : '$storageUrl/blog/${widget.coverImage}')
-            : null;
-
-    return Card(
-      color: Theme.of(context).colorScheme.surface,
-      margin: const EdgeInsets.only(bottom: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          setState(() {
-            _expanded = !_expanded;
-          });
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (imageUrl != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    height: 240,
-                    width: double.infinity,
-                    fit: BoxFit.fitHeight,
-                    errorBuilder:
-                        (context, error, stackTrace) => Container(
-                          height: 160,
-                          width: double.infinity,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.secondary.withOpacity(0.1),
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 40,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                        ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onBackground,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _expanded ? Icons.unfold_less : Icons.unfold_more,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _expanded = !_expanded;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _formatDate(widget.publishedAt),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                widget.summary,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  height: 1.6,
-                  fontSize: 16,
-                ),
-              ),
-              if (_expanded) ...[
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
-                MarkdownBody(
-                  data: widget.content,
-                  styleSheet: MarkdownStyleSheet(
-                    p: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      height: 1.6,
-                    ),
-                    h1: TextStyle(
-                      color: Theme.of(context).colorScheme.onBackground,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h2: TextStyle(
-                      color: Theme.of(context).colorScheme.onBackground,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    h3: TextStyle(
-                      color: Theme.of(context).colorScheme.onBackground,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    code: TextStyle(
-                      backgroundColor: Theme.of(context).colorScheme.background,
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontFamily: 'monospace',
-                    ),
-                    codeblockDecoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.background,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children:
-                    widget.tags.map((tag) {
-                      return Chip(
-                        label: Text(tag),
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.secondary.withOpacity(0.12),
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 13,
-                        ),
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      );
-                    }).toList(),
-              ),
-            ],
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(99),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? cs.secondary.withOpacity(0.18) : cs.surface,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color:
+                selected
+                    ? cs.secondary.withOpacity(0.55)
+                    : cs.outline.withOpacity(0.22),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? cs.secondary : cs.onSurface.withOpacity(0.86),
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 600.ms, delay: 100.ms);
+    );
   }
 }
