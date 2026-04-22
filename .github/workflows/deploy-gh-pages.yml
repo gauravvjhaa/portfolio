@@ -26,17 +26,26 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.29.3
+
+      - name: Flutter version
+        run: flutter --version
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build web (project base path)
-        run: flutter build web --release --base-href /portfolio/
+      - name: Build web
+        env:
+          FLUTTER_WEB_RENDERER: html
+        run: flutter build web --release --base-href /portfolio/ --dart2js-optimization=O3 --no-wasm-dry-run
 
-      - name: Add SPA fallback for deep links
+      - name: SPA fallback for deep links
         run: cp build/web/index.html build/web/404.html
 
-      - name: Upload Pages artifact
+      - name: Disable Jekyll
+        run: touch build/web/.nojekyll
+
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
@@ -52,3 +61,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
