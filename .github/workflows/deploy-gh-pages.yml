@@ -35,9 +35,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        env:
-          FLUTTER_WEB_RENDERER: html
-        run: flutter build web --release --base-href /portfolio/ --dart2js-optimization=O3 --no-wasm-dry-run
+        run: FLUTTER_WEB_RENDERER=html flutter build web --release --dart2js-optimization=O3 --base-href /portfolio/
 
       - name: SPA fallback for deep links
         run: cp build/web/index.html build/web/404.html
