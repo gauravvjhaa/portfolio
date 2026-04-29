@@ -10,9 +10,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const String _introText =
-      "I'm a software developer trying to build exceptional digital experiences. "
-      "Currently, I'm focused on creating accessible, human-centered products.";
-
+    "I'm a computer science student passionate about building meaningful digital experiences. "
+    "My interests include mobile & web development, artificial intelligence, competitive programming, and core computer science.";
+    
   @override
   Widget build(BuildContext context) {
     final introStyle = TextStyle(
@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
             // Fixed box prevents layout shifting while typing
             SizedBox(
               width: 900,
+              height: 120,
               child: AnimatedTextKit(
                 key: const ValueKey('intro_typewriter'),
                 isRepeatingAnimation: false,

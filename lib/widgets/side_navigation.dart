@@ -80,7 +80,7 @@ class _NavHeader extends StatelessWidget {
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            'Welcome!',
+            '',
             maxLines: 1,
             style: TextStyle(
               color: secondary,

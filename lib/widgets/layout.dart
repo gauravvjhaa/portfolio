@@ -42,17 +42,45 @@ class MobileLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 0,
-        title: Text(
-          'Welcome!',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.secondary,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
+  backgroundColor: Theme.of(context).primaryColor,
+  elevation: 0,
+
+  leading: Builder(
+  builder: (context) {
+    return IconButton(
+      icon: Icon(
+        Icons.menu,
+        color: Theme.of(context).colorScheme.secondary,
       ),
+      onPressed: () {
+        Scaffold.of(context).openDrawer();
+      },
+    ).animate(
+      delay: 500.ms,
+      onPlay: (controller) async {
+        for (int i = 0; i < 2; i++) {
+          await controller.forward(from: 0);
+          await controller.reverse();
+        }
+      },
+    ).scale(
+      begin: const Offset(1, 1),
+      end: const Offset(1.2, 1.2),
+      duration: 600.ms,
+      curve: Curves.easeInOut,
+    );
+  },
+),
+
+  title: Text(
+    '',
+    style: TextStyle(
+      color: Theme.of(context).colorScheme.secondary,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 2,
+    ),
+  ),
+),
       drawer: Drawer(
         child: Container(
           color: Theme.of(context).colorScheme.surface,

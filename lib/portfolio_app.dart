@@ -24,16 +24,16 @@ class PortfolioApp extends StatelessWidget {
       title: 'Gaurav Jha | Portfolio',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF0A192F),
+        primaryColor: const Color(0xFF0B0B0C), // was 0xFF0A192F
         colorScheme: ColorScheme.fromSwatch().copyWith(
           secondary: const Color(0xFF64FFDA),
-          surface: const Color(0xFF112240),
-          background: const Color(0xFF0A192F),
+          surface: const Color(0xFF121212),   // was 0xFF112240
+          background: const Color(0xFF0B0B0C),
           onBackground: const Color(0xFFCCD6F6),
           onSurface: const Color(0xFF8892B0),
         ),
         textTheme: GoogleFonts.montserratTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFF0A192F),
+        scaffoldBackgroundColor: const Color(0xFF0B0B0C),
       ),
       initialRoute: '/home',
       onGenerateRoute: (settings) {

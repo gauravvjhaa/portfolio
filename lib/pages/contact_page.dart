@@ -83,9 +83,10 @@ class _ContactPageState extends State<ContactPage> {
             const SizedBox(height: 24),
             Text(
               "Feel free to reach out to me with any questions or opportunities.",
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge!.copyWith(height: 1.6),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                height: 1.6,
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.8),
+              ),
             ),
             const SizedBox(height: 32),
             Responsive(

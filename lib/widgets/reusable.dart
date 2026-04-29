@@ -90,7 +90,10 @@ class LoadingState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SpinKitHourGlass(color: Colors.black.withOpacity(0.54), size: 50.0),
+          SpinKitHourGlass(
+            color: Theme.of(context).colorScheme.secondary,
+            size: 20.0,
+          ),
           const SizedBox(height: 16),
           Text(
             "Loading...",

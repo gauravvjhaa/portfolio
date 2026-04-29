@@ -66,21 +66,21 @@ class _SkillsPageState extends State<SkillsPage> {
                         curve: Curves.easeOutCubic,
                       ),
                   const SizedBox(height: 20),
-                  Text(
-                        "A focused set of technologies and foundations I use to build reliable software.",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge!.copyWith(height: 1.55),
-                      )
-                      .animate(delay: 80.ms)
-                      .fadeIn(duration: 400.ms)
-                      .slideY(
-                        begin: 0.10,
-                        end: 0,
-                        duration: 450.ms,
-                        curve: Curves.easeOutCubic,
-                      ),
-                  const SizedBox(height: 30),
+                  // Text(
+                  //       "A focused set of technologies and foundations I use to build reliable software.",
+                  //       style: Theme.of(
+                  //         context,
+                  //       ).textTheme.bodyLarge!.copyWith(height: 1.55),
+                  //     )
+                  //     .animate(delay: 80.ms)
+                  //     .fadeIn(duration: 400.ms)
+                  //     .slideY(
+                  //       begin: 0.10,
+                  //       end: 0,
+                  //       duration: 450.ms,
+                  //       curve: Curves.easeOutCubic,
+                  //     ),
+                  // const SizedBox(height: 30),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _skillsFuture,
                     builder: (context, snapshot) {

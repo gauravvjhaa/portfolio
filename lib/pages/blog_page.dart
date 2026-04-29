@@ -93,9 +93,8 @@ class _BlogPageState extends State<BlogPage> {
       final tags = (blog['tags'] as List<dynamic>?)?.cast<String>() ?? [];
       set.addAll(tags.map((e) => e.trim()).where((e) => e.isNotEmpty));
     }
-    final list =
-        set.toList()
-          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final list = set.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return list;
   }
 
@@ -111,8 +110,7 @@ class _BlogPageState extends State<BlogPage> {
       final tags = (blog['tags'] as List<dynamic>?)?.cast<String>() ?? [];
       final tagsString = tags.join(' ').toLowerCase();
 
-      final matchesSearch =
-          q.isEmpty ||
+      final matchesSearch = q.isEmpty ||
           title.contains(q) ||
           summary.contains(q) ||
           content.contains(q) ||
@@ -151,9 +149,7 @@ class _BlogPageState extends State<BlogPage> {
 
         final allBlogs = snapshot.data ?? [];
         if (allBlogs.isEmpty) {
-          return const EmptyState(
-            message: "No blog posts yet. Come back soon!",
-          );
+          return const EmptyState(message: "No blog posts yet. Come back soon!");
         }
 
         final tags = _extractTags(allBlogs);
@@ -161,32 +157,37 @@ class _BlogPageState extends State<BlogPage> {
 
         return CustomScrollView(
           slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.only(top: 8),
-              sliver: SliverPersistentHeader(
-                pinned: true,
-                delegate: _SearchHeaderDelegate(
-                  height: 92,
-                  child: Container(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _buildTopSearchBar(context, cs),
-                  ),
+            // SAFE pinned header: height is measured, no fixed extent overflow
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              surfaceTintColor: Colors.transparent,
+              toolbarHeight: 0, // we only need the bottom area
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(0), // measured by child
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
+                  child: _buildTopSearchBar(context, cs),
                 ),
               ),
             ),
+
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   '${blogs.length} post${blogs.length == 1 ? '' : 's'}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.secondary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: cs.secondary,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ),
             ),
+
             if (tags.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
@@ -216,6 +217,7 @@ class _BlogPageState extends State<BlogPage> {
                   ),
                 ),
               ),
+
             if (blogs.isEmpty)
               const SliverToBoxAdapter(
                 child: EmptyState(message: "No blogs match current filters."),
@@ -231,29 +233,31 @@ class _BlogPageState extends State<BlogPage> {
                       mainAxisSpacing: 14,
                       childAspectRatio: cols == 1 ? 1.50 : 1.06,
                     ),
-                    delegate: SliverChildBuilderDelegate((context, i) {
-                      final blog = blogs[i];
-                      return BlogGridCard(
-                        title: (blog['title'] ?? '').toString(),
-                        content: (blog['content'] ?? '').toString(),
-                        publishedAt: _parseDate(blog['published_at']),
-                        coverImage: blog['cover_image_url']?.toString(),
-                        readMins: _estimateReadMinutes(
-                          (blog['content'] ?? '').toString(),
-                        ),
-                        onTap: () {
-                          final slug = (blog['slug'] ?? '').toString().trim();
-                          if (slug.isEmpty) return;
-
-                          Navigator.of(
-                            context,
-                          ).pushNamed('/blog/$slug', arguments: blog);
-                        },
-                      );
-                    }, childCount: blogs.length),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) {
+                        final blog = blogs[i];
+                        return BlogGridCard(
+                          title: (blog['title'] ?? '').toString(),
+                          content: (blog['content'] ?? '').toString(),
+                          publishedAt: _parseDate(blog['published_at']),
+                          coverImage: blog['cover_image_url']?.toString(),
+                          readMins: _estimateReadMinutes(
+                            (blog['content'] ?? '').toString(),
+                          ),
+                          onTap: () {
+                            final slug = (blog['slug'] ?? '').toString().trim();
+                            if (slug.isEmpty) return;
+                            Navigator.of(context)
+                                .pushNamed('/blog/$slug', arguments: blog);
+                          },
+                        );
+                      },
+                      childCount: blogs.length,
+                    ),
                   );
                 },
               ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
           ],
         );
@@ -263,6 +267,7 @@ class _BlogPageState extends State<BlogPage> {
 
   Widget _buildTopSearchBar(BuildContext context, ColorScheme cs) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: cs.surface.withOpacity(0.95),
@@ -280,19 +285,18 @@ class _BlogPageState extends State<BlogPage> {
               hintText: 'Search blogs...',
               hintStyle: TextStyle(color: cs.onSurface.withOpacity(0.6)),
               prefixIcon: Icon(Icons.search_rounded, color: cs.secondary),
-              suffixIcon:
-                  _searchQuery.isNotEmpty
-                      ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                        icon: Icon(
-                          Icons.close_rounded,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      )
-                      : null,
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
               filled: true,
               fillColor: cs.background.withOpacity(0.45),
               border: OutlineInputBorder(
@@ -308,6 +312,9 @@ class _BlogPageState extends State<BlogPage> {
                 borderSide: BorderSide(color: cs.secondary.withOpacity(0.6)),
               ),
               isDense: true,
+              // extra safety: controlled padding so it doesn't bloat on mobile
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           );
 
@@ -324,22 +331,21 @@ class _BlogPageState extends State<BlogPage> {
                 _TimeChip(
                   label: '7 days',
                   selected: _timeFilter == TimeFilter.last7Days,
-                  onTap:
-                      () => setState(() => _timeFilter = TimeFilter.last7Days),
+                  onTap: () =>
+                      setState(() => _timeFilter = TimeFilter.last7Days),
                 ),
                 const SizedBox(width: 8),
                 _TimeChip(
                   label: '30 days',
                   selected: _timeFilter == TimeFilter.last30Days,
-                  onTap:
-                      () => setState(() => _timeFilter = TimeFilter.last30Days),
+                  onTap: () =>
+                      setState(() => _timeFilter = TimeFilter.last30Days),
                 ),
                 const SizedBox(width: 8),
                 _TimeChip(
                   label: 'This year',
                   selected: _timeFilter == TimeFilter.thisYear,
-                  onTap:
-                      () => setState(() => _timeFilter = TimeFilter.thisYear),
+                  onTap: () => setState(() => _timeFilter = TimeFilter.thisYear),
                 ),
               ],
             ),
@@ -360,36 +366,15 @@ class _BlogPageState extends State<BlogPage> {
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [searchField, const SizedBox(height: 10), chips],
+            children: [
+              searchField,
+              const SizedBox(height: 8), // slightly smaller than 10
+              chips,
+            ],
           );
         },
       ),
     );
-  }
-}
-
-class _SearchHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final double height;
-  final Widget child;
-  _SearchHeaderDelegate({required this.height, required this.child});
-
-  @override
-  double get minExtent => height;
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return child;
-  }
-
-  @override
-  bool shouldRebuild(covariant _SearchHeaderDelegate oldDelegate) {
-    return oldDelegate.height != height || oldDelegate.child != child;
   }
 }
 
@@ -417,12 +402,11 @@ class BlogGridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasImage = coverImage != null && coverImage!.trim().isNotEmpty;
-    final imageUrl =
-        hasImage
-            ? (coverImage!.startsWith('http')
-                ? coverImage!
-                : '$storageUrl/blog/${coverImage!}')
-            : null;
+    final imageUrl = hasImage
+        ? (coverImage!.startsWith('http')
+            ? coverImage!
+            : '$storageUrl/blog/${coverImage!}')
+        : null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -439,19 +423,18 @@ class BlogGridCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child:
-                    imageUrl == null
-                        ? Container(
-                          color: cs.background.withOpacity(0.3),
-                          child: Center(
-                            child: Icon(
-                              Icons.image_outlined,
-                              color: cs.secondary,
-                              size: 36,
-                            ),
+                child: imageUrl == null
+                    ? Container(
+                        color: cs.background.withOpacity(0.3),
+                        child: Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: cs.secondary,
+                            size: 36,
                           ),
-                        )
-                        : _AdaptiveCoverImage(imageUrl: imageUrl),
+                        ),
+                      )
+                    : _AdaptiveCoverImage(imageUrl: imageUrl),
               ),
               Container(
                 color: cs.surface.withOpacity(0.98),
@@ -464,10 +447,10 @@ class BlogGridCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: cs.onBackground, // readable now
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
-                      ),
+                            color: cs.onBackground,
+                            fontWeight: FontWeight.w700,
+                            height: 1.25,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -535,8 +518,9 @@ class _AdaptiveCoverImageState extends State<_AdaptiveCoverImage> {
     late ImageStreamListener listener;
     listener = ImageStreamListener(
       (ImageInfo info, bool _) {
-        if (mounted)
+        if (mounted) {
           setState(() => _ratio = info.image.width / info.image.height);
+        }
         stream.removeListener(listener);
       },
       onError: (_, __) {
@@ -590,16 +574,14 @@ class _TimeChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              selected
-                  ? cs.secondary.withOpacity(0.18)
-                  : cs.background.withOpacity(0.35),
+          color: selected
+              ? cs.secondary.withOpacity(0.18)
+              : cs.background.withOpacity(0.35),
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
-            color:
-                selected
-                    ? cs.secondary.withOpacity(0.55)
-                    : cs.outline.withOpacity(0.22),
+            color: selected
+                ? cs.secondary.withOpacity(0.55)
+                : cs.outline.withOpacity(0.22),
           ),
         ),
         child: Text(
@@ -637,10 +619,9 @@ class _TagPill extends StatelessWidget {
           color: selected ? cs.secondary.withOpacity(0.18) : cs.surface,
           borderRadius: BorderRadius.circular(99),
           border: Border.all(
-            color:
-                selected
-                    ? cs.secondary.withOpacity(0.55)
-                    : cs.outline.withOpacity(0.22),
+            color: selected
+                ? cs.secondary.withOpacity(0.55)
+                : cs.outline.withOpacity(0.22),
           ),
         ),
         child: Text(
