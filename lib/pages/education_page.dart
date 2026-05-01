@@ -42,7 +42,6 @@ class _EducationPageState extends State<EducationPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SectionTitle("Education"),
-
             const SizedBox(height: 24),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _educationFuture,
@@ -207,7 +206,6 @@ class EducationTimelineCard extends StatelessWidget {
               ],
             ),
           ),
-
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(bottom: 4),
@@ -224,7 +222,6 @@ class EducationTimelineCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Responsive: Wrap instead of rigid Row
                     Wrap(
                       runSpacing: 8,
                       spacing: 10,
@@ -267,10 +264,7 @@ class EducationTimelineCard extends StatelessWidget {
                           ),
                       ],
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Institution row responsive
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -297,37 +291,33 @@ class EducationTimelineCard extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
-
-                    // Wrap chips to next line naturally
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _EduMetaChip(
-                          icon: Icons.calendar_month_rounded,
-                          label: _yearRange(),
-                        ),
+                        if (grade != null && grade!.trim().isNotEmpty)
+                          _EduMetaChip(
+                            icon: Icons.grade_rounded,
+                            label: 'Grade: ${grade!.trim()}',
+                          ),
                         if (fieldOfStudy != null &&
                             fieldOfStudy!.trim().isNotEmpty)
                           _EduMetaChip(
                             icon: Icons.auto_stories_rounded,
                             label: fieldOfStudy!.trim(),
                           ),
+                        _EduMetaChip(
+                          icon: Icons.calendar_month_rounded,
+                          label: _yearRange(),
+                        ),
                         if (location != null && location!.trim().isNotEmpty)
                           _EduMetaChip(
                             icon: Icons.location_on_outlined,
                             label: location!.trim(),
                           ),
-                        if (grade != null && grade!.trim().isNotEmpty)
-                          _EduMetaChip(
-                            icon: Icons.grade_rounded,
-                            label: 'Grade: ${grade!.trim()}',
-                          ),
                       ],
                     ),
-
                     if (points.isNotEmpty) ...[
                       const SizedBox(height: 14),
                       ...points.map(

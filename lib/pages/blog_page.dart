@@ -40,7 +40,7 @@ class _BlogPageState extends State<BlogPage> {
 
   void _onSearchChanged() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 200), () {
+    _debounce = Timer(const Duration(milliseconds: 220), () {
       if (!mounted) return;
       setState(() => _searchQuery = _searchController.text.trim());
     });
@@ -124,10 +124,23 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   int _gridColumns(double width) {
-    if (width >= 1500) return 4;
-    if (width >= 1100) return 3;
-    if (width >= 700) return 2;
+    if (width >= 1200) return 4;
+    if (width >= 900) return 3;
+    if (width >= 650) return 2;
     return 1;
+  }
+
+  double _cardAspectRatio(double width) {
+    if (width < 450) return 1.18;
+    if (width < 650) return 1.30;
+    if (width < 900) return 1.10;
+    return 1.02;
+  }
+
+  EdgeInsets _pagePadding(double width) {
+    if (width < 600) return const EdgeInsets.symmetric(horizontal: 14);
+    if (width < 900) return const EdgeInsets.symmetric(horizontal: 18);
+    return const EdgeInsets.symmetric(horizontal: 0);
   }
 
   @override
@@ -155,111 +168,140 @@ class _BlogPageState extends State<BlogPage> {
         final tags = _extractTags(allBlogs);
         final blogs = _applyFilters(allBlogs);
 
-        return CustomScrollView(
-          slivers: [
-            // SAFE pinned header: height is measured, no fixed extent overflow
-            SliverAppBar(
-              pinned: true,
-              floating: false,
-              elevation: 0,
-              automaticallyImplyLeading: false,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              surfaceTintColor: Colors.transparent,
-              toolbarHeight: 0, // we only need the bottom area
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(0), // measured by child
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
-                  child: _buildTopSearchBar(context, cs),
-                ),
-              ),
-            ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final pad = _pagePadding(constraints.maxWidth);
 
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '${blogs.length} post${blogs.length == 1 ? '' : 's'}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: cs.secondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ),
-            ),
-
-            if (tags.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _TagPill(
-                          label: 'All tags',
-                          selected: _selectedTag == null,
-                          onTap: () => setState(() => _selectedTag = null),
-                        ),
-                        const SizedBox(width: 8),
-                        ...tags.map(
-                          (tag) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: _TagPill(
-                              label: tag,
-                              selected: _selectedTag == tag,
-                              onTap: () => setState(() => _selectedTag = tag),
-                            ),
-                          ),
-                        ),
-                      ],
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: pad,
+                  sliver: SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 6, 0, 12),
+                      child: const SectionTitle('Blogs'),
                     ),
                   ),
                 ),
-              ),
-
-            if (blogs.isEmpty)
-              const SliverToBoxAdapter(
-                child: EmptyState(message: "No blogs match current filters."),
-              )
-            else
-              SliverLayoutBuilder(
-                builder: (context, constraints) {
-                  final cols = _gridColumns(constraints.crossAxisExtent);
-                  return SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: cols == 1 ? 1.50 : 1.06,
+                SliverPadding(
+                  padding: pad,
+                  sliver: SliverAppBar(
+                    pinned: true,
+                    floating: false,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    surfaceTintColor: Colors.transparent,
+                    toolbarHeight: 0,
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(0),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 4, 0, 10),
+                        child: _buildTopSearchBar(context, cs),
+                      ),
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final blog = blogs[i];
-                        return BlogGridCard(
-                          title: (blog['title'] ?? '').toString(),
-                          content: (blog['content'] ?? '').toString(),
-                          publishedAt: _parseDate(blog['published_at']),
-                          coverImage: blog['cover_image_url']?.toString(),
-                          readMins: _estimateReadMinutes(
-                            (blog['content'] ?? '').toString(),
+                  ),
+                ),
+                SliverPadding(
+                  padding: pad,
+                  sliver: SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        '${blogs.length} post${blogs.length == 1 ? '' : 's'}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: cs.secondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (tags.isNotEmpty)
+                  SliverPadding(
+                    padding: pad,
+                    sliver: SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _TagPill(
+                                label: 'All tags',
+                                selected: _selectedTag == null,
+                                onTap: () =>
+                                    setState(() => _selectedTag = null),
+                              ),
+                              const SizedBox(width: 8),
+                              ...tags.map(
+                                (tag) => Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: _TagPill(
+                                    label: tag,
+                                    selected: _selectedTag == tag,
+                                    onTap: () =>
+                                        setState(() => _selectedTag = tag),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          onTap: () {
-                            final slug = (blog['slug'] ?? '').toString().trim();
-                            if (slug.isEmpty) return;
-                            Navigator.of(context)
-                                .pushNamed('/blog/$slug', arguments: blog);
-                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                if (blogs.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyState(message: "No blogs match current filters."),
+                  )
+                else
+                  SliverPadding(
+                    padding: pad,
+                    sliver: SliverLayoutBuilder(
+                      builder: (context, constraints) {
+                        final cols = _gridColumns(constraints.crossAxisExtent);
+                        return SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: cols,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                            childAspectRatio:
+                                _cardAspectRatio(constraints.crossAxisExtent),
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) {
+                              final blog = blogs[i];
+                              return BlogGridCard(
+                                title: (blog['title'] ?? '').toString(),
+                                content: (blog['content'] ?? '').toString(),
+                                publishedAt: _parseDate(blog['published_at']),
+                                coverImage: blog['cover_image_url']?.toString(),
+                                readMins: _estimateReadMinutes(
+                                  (blog['content'] ?? '').toString(),
+                                ),
+                                onTap: () {
+                                  final slug =
+                                      (blog['slug'] ?? '').toString().trim();
+                                  if (slug.isEmpty) return;
+                                  Navigator.of(context).pushNamed(
+                                    '/blog/$slug',
+                                    arguments: blog,
+                                  );
+                                },
+                              );
+                            },
+                            childCount: blogs.length,
+                          ),
                         );
                       },
-                      childCount: blogs.length,
                     ),
-                  );
-                },
-              ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 18)),
-          ],
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 18)),
+              ],
+            );
+          },
         );
       },
     );
@@ -280,6 +322,7 @@ class _BlogPageState extends State<BlogPage> {
 
           final searchField = TextField(
             controller: _searchController,
+            textInputAction: TextInputAction.search,
             style: TextStyle(color: cs.onSurface),
             decoration: InputDecoration(
               hintText: 'Search blogs...',
@@ -312,7 +355,6 @@ class _BlogPageState extends State<BlogPage> {
                 borderSide: BorderSide(color: cs.secondary.withOpacity(0.6)),
               ),
               isDense: true,
-              // extra safety: controlled padding so it doesn't bloat on mobile
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
@@ -368,7 +410,7 @@ class _BlogPageState extends State<BlogPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               searchField,
-              const SizedBox(height: 8), // slightly smaller than 10
+              const SizedBox(height: 8),
               chips,
             ],
           );
@@ -408,86 +450,80 @@ class BlogGridCard extends StatelessWidget {
             : '$storageUrl/blog/${coverImage!}')
         : null;
 
-    return InkWell(
+    return Material(
+      color: cs.surface,
       borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outline.withOpacity(0.15)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: cs.outline.withOpacity(0.15)),
+          ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: imageUrl == null
-                    ? Container(
-                        color: cs.background.withOpacity(0.3),
-                        child: Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: cs.secondary,
-                            size: 36,
-                          ),
-                        ),
-                      )
-                    : _AdaptiveCoverImage(imageUrl: imageUrl),
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _CoverImage(imageUrl: imageUrl),
               ),
-              Container(
-                color: cs.surface.withOpacity(0.98),
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: cs.onBackground,
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: cs.onBackground,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.25,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: cs.secondary,
                           ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_rounded,
-                          size: 14,
-                          color: cs.secondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _formatDate(publishedAt),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _formatDate(publishedAt),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: cs.secondary,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.schedule_rounded,
+                            size: 14,
+                            color: cs.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$readMins min',
                             style: TextStyle(
                               color: cs.secondary,
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 14,
-                          color: cs.secondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$readMins min',
-                          style: TextStyle(
-                            color: cs.secondary,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -498,57 +534,38 @@ class BlogGridCard extends StatelessWidget {
   }
 }
 
-class _AdaptiveCoverImage extends StatefulWidget {
-  final String imageUrl;
-  const _AdaptiveCoverImage({required this.imageUrl});
-
-  @override
-  State<_AdaptiveCoverImage> createState() => _AdaptiveCoverImageState();
-}
-
-class _AdaptiveCoverImageState extends State<_AdaptiveCoverImage> {
-  double? _ratio;
-  bool _error = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final provider = NetworkImage(widget.imageUrl);
-    final stream = provider.resolve(const ImageConfiguration());
-    late ImageStreamListener listener;
-    listener = ImageStreamListener(
-      (ImageInfo info, bool _) {
-        if (mounted) {
-          setState(() => _ratio = info.image.width / info.image.height);
-        }
-        stream.removeListener(listener);
-      },
-      onError: (_, __) {
-        if (mounted) setState(() => _error = true);
-        stream.removeListener(listener);
-      },
-    );
-    stream.addListener(listener);
-  }
+class _CoverImage extends StatelessWidget {
+  final String? imageUrl;
+  const _CoverImage({required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    if (_error) {
-      return Center(
-        child: Icon(Icons.broken_image_rounded, color: cs.secondary, size: 34),
+
+    if (imageUrl == null) {
+      return Container(
+        color: cs.background.withOpacity(0.3),
+        child: Center(
+          child: Icon(
+            Icons.image_outlined,
+            color: cs.secondary,
+            size: 36,
+          ),
+        ),
       );
     }
 
-    final isExtreme = _ratio != null && (_ratio! > 2.2 || _ratio! < 0.7);
     return Container(
-      color: cs.background.withOpacity(0.2),
+      color: cs.background.withOpacity(0.25),
       child: Image.network(
-        widget.imageUrl,
-        fit: isExtreme ? BoxFit.contain : BoxFit.cover,
+        imageUrl!,
+        fit: BoxFit.contain,
         width: double.infinity,
         height: double.infinity,
         filterQuality: FilterQuality.medium,
+        errorBuilder: (context, _, __) => Center(
+          child: Icon(Icons.broken_image_rounded, color: cs.secondary, size: 34),
+        ),
       ),
     );
   }

@@ -41,13 +41,6 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SectionTitle("Open Source"),
-            const SizedBox(height: 24),
-            Text(
-              "My contributions to open source projects and the developer community.",
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge!.copyWith(height: 1.6),
-            ),
             const SizedBox(height: 32),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _opensourceFuture,

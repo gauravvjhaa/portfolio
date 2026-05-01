@@ -60,13 +60,7 @@ class _GalleryPageState extends State<GalleryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionTitle("Gallery"),
-                const SizedBox(height: 24),
-                Text(
-                  "A collection of images showcasing my work and experiences.",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge!.copyWith(height: 1.6),
-                ),
+
                 const SizedBox(height: 32),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _galleryFuture,

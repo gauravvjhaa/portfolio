@@ -90,19 +90,6 @@ class _ResumePageState extends State<ResumePage> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                    "You can view and download all my resumes below.",
-                                    style: Theme.of(context).textTheme.bodyLarge
-                                        ?.copyWith(height: 1.6),
-                                  )
-                                  .animate(delay: 80.ms)
-                                  .fadeIn(duration: 420.ms)
-                                  .slideY(
-                                    begin: 0.12,
-                                    end: 0,
-                                    duration: 440.ms,
-                                    curve: Curves.easeOutCubic,
-                                  ),
                               const SizedBox(height: 32),
                               ...List.generate(resumes.length, (index) {
                                 final resume = resumes[index];
@@ -165,6 +152,37 @@ class AnimatedResumeCard extends StatefulWidget {
 
 class _AnimatedResumeCardState extends State<AnimatedResumeCard> {
   bool _hovering = false;
+
+  bool get _isMobile => MediaQuery.of(context).size.width < 600;
+
+  String _viewerUrl(String url) {
+    if (_isMobile) {
+      final encoded = Uri.encodeComponent(url);
+      return 'https://docs.google.com/gview?embedded=1&url=$encoded';
+    }
+    return url;
+  }
+
+  String _downloadUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    if (uri.queryParameters.containsKey('download')) return url;
+    final updated = uri.replace(
+      queryParameters: {...uri.queryParameters, 'download': '1'},
+    );
+    return updated.toString();
+  }
+
+  void _viewResume() {
+    html.window.open(_viewerUrl(widget.resumeUrl), '_blank');
+  }
+
+  void _downloadResume() {
+    final anchor = html.AnchorElement(href: _downloadUrl(widget.resumeUrl))
+      ..setAttribute('download', 'Gaurav_Jha_Resume.pdf')
+      ..click();
+    anchor.remove();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -258,22 +276,13 @@ class _AnimatedResumeCardState extends State<AnimatedResumeCard> {
                           icon: Icons.visibility,
                           label: 'View Resume',
                           filled: true,
-                          onTap: () {
-                            html.window.open(widget.resumeUrl, 'Resume');
-                          },
+                          onTap: _viewResume,
                         ),
                         _ActionButton(
                           icon: Icons.download,
                           label: 'Download PDF',
                           filled: false,
-                          onTap: () {
-                            html.AnchorElement(href: widget.resumeUrl)
-                              ..setAttribute(
-                                'download',
-                                'Gaurav_Jha_Resume.pdf',
-                              )
-                              ..click();
-                          },
+                          onTap: _downloadResume,
                         ),
                       ],
                     ),
