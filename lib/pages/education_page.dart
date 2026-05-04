@@ -27,80 +27,100 @@ class _EducationPageState extends State<EducationPage> {
           .select()
           .order('end_year', ascending: false, nullsFirst: true)
           .order('start_year', ascending: false);
-
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw Exception('Failed to load education: $e');
     }
   }
 
+  // Responsive padding matching your blog, contact, projects, and experience pages
+  EdgeInsets _pagePadding(double width) {
+    if (width < 600) return const EdgeInsets.symmetric(horizontal: 14);
+    if (width < 900) return const EdgeInsets.symmetric(horizontal: 18);
+    return const EdgeInsets.symmetric(horizontal: 24);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: AnimatedContentContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SectionTitle("Education"),
-            const SizedBox(height: 24),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _educationFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState();
-                }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final pad = _pagePadding(constraints.maxWidth);
+        return SingleChildScrollView(
+          padding: pad.copyWith(top: 48, bottom: 48),
+          child: Center(
+            child: AnimatedContentContainer(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionTitle("Education"),
+                    const SizedBox(height: 24),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _educationFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const LoadingState();
+                        }
 
-                if (snapshot.hasError) {
-                  return ErrorState(
-                    message:
-                        "Failed to load education data. Please try again later.",
-                    onRetry:
-                        () => setState(
-                          () => _educationFuture = _fetchEducation(),
-                        ),
-                  );
-                }
+                        if (snapshot.hasError) {
+                          return ErrorState(
+                            message:
+                                "Failed to load education data. Please try again later.",
+                            onRetry: () => setState(
+                                () => _educationFuture = _fetchEducation()),
+                          );
+                        }
 
-                final education = snapshot.data ?? [];
+                        final education = snapshot.data ?? [];
 
-                if (education.isEmpty) {
-                  return const EmptyState(
-                    message: "No education details to display yet.",
-                  );
-                }
+                        if (education.isEmpty) {
+                          return const EmptyState(
+                            message: "No education details to display yet.",
+                          );
+                        }
 
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: education.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final edu = education[index];
-                    return EducationTimelineCard(
-                          institution: (edu['institution'] ?? '').toString(),
-                          degree: (edu['degree'] ?? '').toString(),
-                          fieldOfStudy: edu['field_of_study']?.toString(),
-                          startYear: edu['start_year'] as int?,
-                          endYear: edu['end_year'] as int?,
-                          grade: edu['grade']?.toString(),
-                          location: edu['location']?.toString(),
-                          description: edu['description']?.toString(),
-                          isLast: index == education.length - 1,
-                        )
-                        .animate(delay: Duration(milliseconds: 60 * index))
-                        .fadeIn(duration: 320.ms)
-                        .slideY(
-                          begin: 0.03,
-                          end: 0,
-                          curve: Curves.easeOutCubic,
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: education.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final edu = education[index];
+                            return EducationTimelineCard(
+                                  institution:
+                                      (edu['institution'] ?? '').toString(),
+                                  degree: (edu['degree'] ?? '').toString(),
+                                  fieldOfStudy:
+                                      edu['field_of_study']?.toString(),
+                                  startYear: edu['start_year'] as int?,
+                                  endYear: edu['end_year'] as int?,
+                                  grade: edu['grade']?.toString(),
+                                  location: edu['location']?.toString(),
+                                  description: edu['description']?.toString(),
+                                  isLast: index == education.length - 1,
+                                )
+                                .animate(
+                                    delay:
+                                        Duration(milliseconds: 60 * index))
+                                .fadeIn(duration: 320.ms)
+                                .slideY(
+                                  begin: 0.03,
+                                  end: 0,
+                                  curve: Curves.easeOutCubic,
+                                );
+                          },
                         );
-                  },
-                );
-              },
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -370,7 +390,7 @@ class _EduMetaChip extends StatelessWidget {
   final String label;
 
   const _EduMetaChip({Key? key, required this.icon, required this.label})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

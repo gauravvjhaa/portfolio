@@ -7,7 +7,7 @@ class SideNavigation extends StatelessWidget {
 
   static const List<Map<String, String>> _navItems = [
     {'title': 'Home', 'route': '/home'},
-    {'title': 'About', 'route': '/about'},
+    // {'title': 'About', 'route': '/about'},
     {'title': 'Projects', 'route': '/projects'},
     {'title': 'Skills', 'route': '/skills'},
     {'title': 'Experience', 'route': '/experience'},

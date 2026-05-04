@@ -64,6 +64,13 @@ class _ContactPageState extends State<ContactPage> {
     }
   }
 
+  // Padding logic similar to your blog page
+  EdgeInsets _pagePadding(double width) {
+    if (width < 600) return const EdgeInsets.symmetric(horizontal: 14);
+    if (width < 900) return const EdgeInsets.symmetric(horizontal: 18);
+    return const EdgeInsets.symmetric(horizontal: 24); // comfortable on desktop
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -74,42 +81,53 @@ class _ContactPageState extends State<ContactPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: AnimatedContentContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SectionTitle("Contact"),
-            const SizedBox(height: 24),
-            Text(
-              "Feel free to reach out to me with any questions or opportunities.",
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                height: 1.6,
-                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final pad = _pagePadding(constraints.maxWidth);
+        return SingleChildScrollView(
+          padding: pad.copyWith(top: 48, bottom: 48), // keep vertical spacing
+          child: Center(
+            child: AnimatedContentContainer(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 860), // prevents over‑stretching
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionTitle("Contact"),
+                    const SizedBox(height: 24),
+                    Text(
+                      "Feel free to reach out to me with any questions or opportunities.",
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        height: 1.6,
+                        color: Theme.of(context).colorScheme.onBackground.withOpacity(0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Responsive(
+                      mobile: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildContactInfo(context),
+                          const SizedBox(height: 40),
+                          _buildContactForm(context),
+                        ],
+                      ),
+                      desktop: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 2, child: _buildContactInfo(context)),
+                          const SizedBox(width: 60),
+                          Expanded(flex: 3, child: _buildContactForm(context)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 32),
-            Responsive(
-              mobile: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildContactInfo(context),
-                  const SizedBox(height: 40),
-                  _buildContactForm(context),
-                ],
-              ),
-              desktop: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: _buildContactInfo(context)),
-                  const SizedBox(width: 60),
-                  Expanded(flex: 3, child: _buildContactForm(context)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -284,7 +302,7 @@ class _ContactPageState extends State<ContactPage> {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
-                  // Name is now optional, so we return null (no error)
+                  // Name is optional
                   return null;
                 },
               ),
@@ -305,7 +323,6 @@ class _ContactPageState extends State<ContactPage> {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 validator: (value) {
-                  // Only validate the email format if the user actually typed something
                   if (value != null &&
                       value.isNotEmpty &&
                       !value.contains('@')) {

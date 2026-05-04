@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../main.dart';
 import '../widgets/reusable.dart';
 
@@ -9,7 +10,7 @@ class BlogDetailsPage extends StatefulWidget {
   final Map<String, dynamic>? initialBlog;
 
   const BlogDetailsPage({Key? key, required this.slug, this.initialBlog})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<BlogDetailsPage> createState() => _BlogDetailsPageState();
@@ -27,13 +28,12 @@ class _BlogDetailsPageState extends State<BlogDetailsPage> {
   Future<Map<String, dynamic>> _resolveBlog() async {
     if (widget.initialBlog != null) return widget.initialBlog!;
 
-    final response =
-        await supabase
-            .from('blogs')
-            .select()
-            .eq('slug', widget.slug)
-            .eq('is_published', true)
-            .maybeSingle();
+    final response = await supabase
+        .from('blogs')
+        .select()
+        .eq('slug', widget.slug)
+        .eq('is_published', true)
+        .maybeSingle();
 
     if (response == null) {
       throw Exception('Blog not found');
@@ -88,63 +88,52 @@ class _BlogDetailsPageState extends State<BlogDetailsPage> {
         final readMins = _estimateReadMinutes(content);
 
         final cover = blog['cover_image_url']?.toString();
-        final imageUrl =
-            (cover != null && cover.isNotEmpty)
-                ? (cover.startsWith('http') ? cover : '$storageUrl/blog/$cover')
-                : null;
+        final imageUrl = (cover != null && cover.isNotEmpty)
+            ? (cover.startsWith('http') ? cover : '$storageUrl/blog/$cover')
+            : null;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 980),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 860),
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
                   children: [
-                    TextButton.icon(
-                      onPressed:
-                          () => Navigator.of(
-                            context,
-                          ).pushReplacementNamed('/blog'),
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      label: const Text('Back to blogs'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: cs.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
+                    // ── BLOG TITLE ────────────────────────
                     Text(
                       title,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineMedium?.copyWith(
-                        color: cs.onBackground,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                      ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                            color: cs.onBackground,
+                            fontWeight: FontWeight.w800,
+                            height: 1.25,
+                            letterSpacing: -0.5,
+                          ),
                     ),
+                    const SizedBox(height: 14),
 
-                    const SizedBox(height: 10),
+                    // ── META INFO ─────────────────────────
                     Wrap(
-                      spacing: 14,
+                      spacing: 20,
                       runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 16,
-                              color: cs.secondary,
-                            ),
+                            Icon(Icons.calendar_today_rounded,
+                                size: 16, color: cs.secondary),
                             const SizedBox(width: 6),
                             Text(
                               DateFormat('MMM d, yyyy').format(publishedAt),
                               style: TextStyle(
-                                color: cs.secondary,
-                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15,
                               ),
                             ),
                           ],
@@ -152,17 +141,15 @@ class _BlogDetailsPageState extends State<BlogDetailsPage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 16,
-                              color: cs.secondary,
-                            ),
+                            Icon(Icons.schedule_rounded,
+                                size: 16, color: cs.secondary),
                             const SizedBox(width: 6),
                             Text(
                               '$readMins min read',
                               style: TextStyle(
-                                color: cs.secondary,
-                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15,
                               ),
                             ),
                           ],
@@ -171,47 +158,58 @@ class _BlogDetailsPageState extends State<BlogDetailsPage> {
                     ),
 
                     if (imageUrl != null) ...[
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 28),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 8,
-                          child: Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, __, ___) => Container(
-                                  color: cs.surface,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.broken_image_rounded,
-                                      color: cs.secondary,
-                                      size: 40,
-                                    ),
-                                  ),
-                                ),
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          placeholder: (context, url) => Container(
+                            height: 200,
+                            color: cs.surface,
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            height: 200,
+                            color: cs.surface,
+                            child: Center(
+                              child: Icon(Icons.broken_image_rounded,
+                                  color: cs.secondary, size: 40),
+                            ),
                           ),
                         ),
                       ),
                     ],
 
                     if (summary.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      Text(
-                        summary,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
-                          color: cs.onBackground.withOpacity(0.92),
-                          height: 1.65,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(height: 26),
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: cs.surface.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: cs.outline.withOpacity(0.15)),
+                        ),
+                        child: Text(
+                          summary,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: cs.onBackground.withOpacity(0.9),
+                                height: 1.65,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ),
                     ],
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 32),
 
-                    // ✅ Highly readable markdown styles for dark theme
+                    // ── MARKDOWN CONTENT ─────────────────
                     MarkdownBody(
                       data: content,
                       selectable: true,
@@ -304,25 +302,26 @@ class _BlogDetailsPageState extends State<BlogDetailsPage> {
                     ),
 
                     if (tags.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children:
-                            tags
-                                .map(
-                                  (tag) => Chip(
-                                    label: Text(tag),
-                                    backgroundColor: cs.secondary.withOpacity(
-                                      0.12,
-                                    ),
-                                    labelStyle: TextStyle(
-                                      color: cs.secondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                        children: tags
+                            .map(
+                              (tag) => Chip(
+                                label: Text(tag),
+                                backgroundColor:
+                                    cs.secondary.withOpacity(0.12),
+                                labelStyle: TextStyle(
+                                  color: cs.secondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ],
                   ],

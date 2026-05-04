@@ -64,9 +64,9 @@ class PortfolioApp extends StatelessWidget {
               break;
 
             // other routes...
-            case 'about':
-              page = const AboutPage();
-              break;
+            // case 'about':
+            //   page = const AboutPage();
+            //   break;
             case 'projects':
               page = const ProjectsPage();
               break;

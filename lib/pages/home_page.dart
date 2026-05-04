@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: Alignment.topLeft, // ← changed from topCenter
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxContentWidth),
         child: Padding(

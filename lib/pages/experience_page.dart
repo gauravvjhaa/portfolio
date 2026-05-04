@@ -29,91 +29,106 @@ class _ExperiencePageState extends State<ExperiencePage> {
           .select()
           .order('is_current', ascending: false)
           .order('start_date', ascending: false);
-
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw Exception('Failed to load experience: $e');
     }
   }
 
+  // Responsive padding – same as your other pages
+  EdgeInsets _pagePadding(double width) {
+    if (width < 600) return const EdgeInsets.symmetric(horizontal: 14);
+    if (width < 900) return const EdgeInsets.symmetric(horizontal: 18);
+    return const EdgeInsets.symmetric(horizontal: 24);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: AnimatedContentContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SectionTitle("Experience"),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final pad = _pagePadding(constraints.maxWidth);
+        return SingleChildScrollView(
+          padding: pad.copyWith(top: 48, bottom: 48),
+          child: Center(
+            child: AnimatedContentContainer(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionTitle("Experience"),
+                    const SizedBox(height: 24),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _experienceFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const LoadingState();
+                        }
 
-            const SizedBox(height: 24),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _experienceFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState();
-                }
+                        if (snapshot.hasError) {
+                          return ErrorState(
+                            message:
+                                "Failed to load experience data. Please try again later.",
+                            onRetry: () => setState(
+                                () => _experienceFuture = _fetchExperience()),
+                          );
+                        }
 
-                if (snapshot.hasError) {
-                  return ErrorState(
-                    message:
-                        "Failed to load experience data. Please try again later.",
-                    onRetry:
-                        () => setState(
-                          () => _experienceFuture = _fetchExperience(),
-                        ),
-                  );
-                }
+                        final experiences = snapshot.data ?? [];
 
-                final experiences = snapshot.data ?? [];
+                        if (experiences.isEmpty) {
+                          return const EmptyState(
+                            message: "No work experience to display yet.",
+                          );
+                        }
 
-                if (experiences.isEmpty) {
-                  return const EmptyState(
-                    message: "No work experience to display yet.",
-                  );
-                }
-
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: experiences.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 18),
-                  itemBuilder: (context, index) {
-                    final exp = experiences[index];
-                    return ExperienceTimelineCard(
-                          organization: exp['organization'] ?? '',
-                          title: exp['title'] ?? '',
-                          location: exp['location'],
-                          description: (exp['description'] ?? '').toString(),
-                          startDate:
-                              exp['start_date'] != null
-                                  ? DateTime.tryParse(
-                                    exp['start_date'].toString(),
-                                  )
-                                  : null,
-                          endDate:
-                              exp['end_date'] != null
-                                  ? DateTime.tryParse(
-                                    exp['end_date'].toString(),
-                                  )
-                                  : null,
-                          isCurrent: exp['is_current'] ?? false,
-                          liveLink: (exp['live'] ?? '').toString(),
-                          isLast: index == experiences.length - 1,
-                        )
-                        .animate(delay: Duration(milliseconds: 70 * index))
-                        .fadeIn(duration: 380.ms)
-                        .slideY(
-                          begin: 0.04,
-                          end: 0,
-                          curve: Curves.easeOutCubic,
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: experiences.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 18),
+                          itemBuilder: (context, index) {
+                            final exp = experiences[index];
+                            return ExperienceTimelineCard(
+                                  organization: exp['organization'] ?? '',
+                                  title: exp['title'] ?? '',
+                                  location: exp['location'],
+                                  description:
+                                      (exp['description'] ?? '').toString(),
+                                  startDate: exp['start_date'] != null
+                                      ? DateTime.tryParse(
+                                          exp['start_date'].toString())
+                                      : null,
+                                  endDate: exp['end_date'] != null
+                                      ? DateTime.tryParse(
+                                          exp['end_date'].toString())
+                                      : null,
+                                  isCurrent: exp['is_current'] ?? false,
+                                  liveLink: (exp['live'] ?? '').toString(),
+                                  isLast: index == experiences.length - 1,
+                                )
+                                .animate(
+                                    delay:
+                                        Duration(milliseconds: 70 * index))
+                                .fadeIn(duration: 380.ms)
+                                .slideY(
+                                  begin: 0.04,
+                                  end: 0,
+                                  curve: Curves.easeOutCubic,
+                                );
+                          },
                         );
-                  },
-                );
-              },
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -162,8 +177,7 @@ class ExperienceTimelineCard extends StatelessWidget {
         isCurrent ? DateTime.now() : (endDate ?? DateTime.now());
     if (effectiveEnd.isBefore(startDate!)) return '';
 
-    int months =
-        (effectiveEnd.year - startDate!.year) * 12 +
+    int months = (effectiveEnd.year - startDate!.year) * 12 +
         (effectiveEnd.month - startDate!.month);
 
     if (effectiveEnd.day < startDate!.day) months -= 1;
@@ -209,9 +223,8 @@ class ExperienceTimelineCard extends StatelessWidget {
 
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open live link')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Could not open live link')));
     }
   }
 
@@ -270,10 +283,7 @@ class ExperienceTimelineCard extends StatelessWidget {
                 border: Border.all(color: secondary.withOpacity(0.14)),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -294,9 +304,7 @@ class ExperienceTimelineCard extends StatelessWidget {
                         if (isCurrent)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.green.withOpacity(0.16),
                               borderRadius: BorderRadius.circular(999),
@@ -327,7 +335,7 @@ class ExperienceTimelineCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 14.2, // slightly smaller
+                              fontSize: 14.2,
                               fontWeight: FontWeight.w600,
                               color: secondary.withOpacity(0.95),
                               height: 1.2,
@@ -398,7 +406,8 @@ class ExperienceTimelineCard extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton.icon(
                           onPressed: () => _openLiveLink(context),
-                          icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                          icon:
+                              const Icon(Icons.open_in_new_rounded, size: 17),
                           label: const Text('View Live'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: secondary,
@@ -406,9 +415,7 @@ class ExperienceTimelineCard extends StatelessWidget {
                               color: secondary.withOpacity(0.45),
                             ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
+                                horizontal: 14, vertical: 10),
                             textStyle: const TextStyle(
                               fontWeight: FontWeight.w600,
                             ),
@@ -432,7 +439,7 @@ class _MetaChip extends StatelessWidget {
   final String label;
 
   const _MetaChip({Key? key, required this.icon, required this.label})
-    : super(key: key);
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

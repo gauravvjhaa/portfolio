@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // ← added
 import '../main.dart';
 import '../widgets/reusable.dart';
 
@@ -555,17 +556,25 @@ class _CoverImage extends StatelessWidget {
       );
     }
 
-    return Container(
-      color: cs.background.withOpacity(0.25),
-      child: Image.network(
-        imageUrl!,
-        fit: BoxFit.contain,
-        width: double.infinity,
-        height: double.infinity,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (context, _, __) => Center(
-          child: Icon(Icons.broken_image_rounded, color: cs.secondary, size: 34),
+    return CachedNetworkImage(
+      imageUrl: imageUrl!,
+      fit: BoxFit.contain,
+      width: double.infinity,
+      height: double.infinity,
+      memCacheWidth: 400,       // resample to typical card width
+      memCacheHeight: 225,      // 16:9 of 400
+      placeholder: (context, url) => Container(
+        color: cs.background.withOpacity(0.25),
+        child: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
+      ),
+      errorWidget: (context, url, error) => Center(
+        child: Icon(Icons.broken_image_rounded, color: cs.secondary, size: 34),
       ),
     );
   }
