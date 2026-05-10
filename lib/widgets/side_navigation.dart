@@ -3,93 +3,77 @@ import 'package:url_launcher/url_launcher.dart';
 
 class SideNavigation extends StatelessWidget {
   final bool isMobile;
-  const SideNavigation({Key? key, this.isMobile = false}) : super(key: key);
+
+  const SideNavigation({
+    Key? key,
+    this.isMobile = false,
+  }) : super(key: key);
 
   static const List<Map<String, String>> _navItems = [
     {'title': 'Home', 'route': '/home'},
-    // {'title': 'About', 'route': '/about'},
     {'title': 'Projects', 'route': '/projects'},
     {'title': 'Skills', 'route': '/skills'},
     {'title': 'Experience', 'route': '/experience'},
     {'title': 'Education', 'route': '/education'},
+    {'title': 'Achievements', 'route': '/certifications'},
     {'title': 'Blog', 'route': '/blog'},
-    {'title': 'Contact', 'route': '/contact'},
-    {'title': 'Certifications', 'route': '/certifications'},
-    {'title': 'Gallery', 'route': '/gallery'},
     {'title': 'Resume', 'route': '/resume'},
-    {'title': 'Open Source', 'route': '/opensource'},
+    {'title': 'Contact', 'route': '/contact'},
   ];
 
   @override
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
+
     final secondary = Theme.of(context).colorScheme.secondary;
     final onBg = Theme.of(context).colorScheme.onBackground;
 
     return Container(
-      width: isMobile ? double.infinity : 232,
+      width: isMobile ? double.infinity : 248,
       color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const _NavHeader(),
-          const SizedBox(height: 12),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              itemCount: _navItems.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 2),
-              itemBuilder: (context, i) {
-                final item = _navItems[i];
-                final route = item['route']!;
-                final isActive = currentRoute == route;
+            child: Center(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                itemCount: _navItems.length,
+                separatorBuilder:
+                    (_, __) => const SizedBox(height: 9),
+                itemBuilder: (context, i) {
+                  final item = _navItems[i];
+                  final route = item['route']!;
+                  final isActive = currentRoute == route;
 
-                return _NavTile(
-                  title: item['title']!,
-                  isActive: isActive,
-                  activeColor: secondary,
-                  textColor: onBg,
-                  onTap: () {
-                    if (isActive) return;
-                    if (isMobile) Navigator.pop(context);
-                    Navigator.of(context).pushReplacementNamed(route);
-                  },
-                );
-              },
+                  return _NavTile(
+                    title: item['title']!,
+                    isActive: isActive,
+                    activeColor: secondary,
+                    textColor: onBg,
+                    onTap: () {
+                      if (isActive) return;
+
+                      if (isMobile) {
+                        Navigator.pop(context);
+                      }
+
+                      Navigator.of(
+                        context,
+                      ).pushReplacementNamed(route);
+                    },
+                  );
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 12),
+
           const SocialLinks(),
         ],
-      ),
-    );
-  }
-}
-
-class _NavHeader extends StatelessWidget {
-  const _NavHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.secondary;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: SizedBox(
-        width: double.infinity,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            '',
-            maxLines: 1,
-            style: TextStyle(
-              color: secondary,
-              fontSize: 34,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.4,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -120,8 +104,11 @@ class _NavTileState extends State<_NavTile> {
 
   @override
   Widget build(BuildContext context) {
-    final activeBg = widget.activeColor.withOpacity(0.12);
-    final hoverBg = widget.activeColor.withOpacity(0.07);
+    final activeBg =
+        widget.activeColor.withOpacity(0.12);
+
+    final hoverBg =
+        widget.activeColor.withOpacity(0.07);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -130,22 +117,29 @@ class _NavTileState extends State<_NavTile> {
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color:
-              widget.isActive
-                  ? activeBg
-                  : (_hover ? hoverBg : Colors.transparent),
+          color: widget.isActive
+              ? activeBg
+              : (_hover
+                    ? hoverBg
+                    : Colors.transparent),
           borderRadius: BorderRadius.circular(10),
         ),
         child: ListTile(
           dense: true,
-          visualDensity: const VisualDensity(horizontal: -1, vertical: -1),
+          visualDensity: const VisualDensity(
+            horizontal: -1,
+            vertical: -1,
+          ),
           minLeadingWidth: 6,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8),
           leading: Container(
             width: 4,
             height: 22,
             decoration: BoxDecoration(
-              color: widget.isActive ? widget.activeColor : Colors.transparent,
+              color: widget.isActive
+                  ? widget.activeColor
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -155,8 +149,12 @@ class _NavTileState extends State<_NavTile> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: widget.isActive ? widget.activeColor : widget.textColor,
-              fontWeight: widget.isActive ? FontWeight.w700 : FontWeight.w500,
+              color: widget.isActive
+                  ? widget.activeColor
+                  : widget.textColor,
+              fontWeight: widget.isActive
+                  ? FontWeight.w700
+                  : FontWeight.w500,
               fontSize: 15.2,
               letterSpacing: 0.1,
             ),
@@ -183,22 +181,26 @@ class SocialLinks extends StatelessWidget {
           SocialIcon(
             icon: Icons.mail_outline_rounded,
             tooltip: 'Email',
-            url: 'mailto:gauravkumarjha306@gmail.com',
+            url:
+                'mailto:gauravkumarjha306@gmail.com',
           ),
           SocialIcon(
             icon: Icons.terminal_rounded,
             tooltip: 'GitHub',
-            url: 'https://github.com/gauravvjhaa',
+            url:
+                'https://github.com/gauravvjhaa',
           ),
           SocialIcon(
             icon: Icons.work_outline_rounded,
             tooltip: 'LinkedIn',
-            url: 'https://linkedin.com/in/gauravvjhaa',
+            url:
+                'https://linkedin.com/in/gauravvjhaa',
           ),
           SocialIcon(
             icon: Icons.facebook_rounded,
             tooltip: 'Facebook',
-            url: 'https://www.facebook.com/profile.php?id=61583634223446',
+            url:
+                'https://www.facebook.com/profile.php?id=61583634223446',
           ),
         ],
       ),
@@ -219,35 +221,52 @@ class SocialIcon extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<SocialIcon> createState() => _SocialIconState();
+  State<SocialIcon> createState() =>
+      _SocialIconState();
 }
 
-class _SocialIconState extends State<SocialIcon> {
+class _SocialIconState
+    extends State<SocialIcon> {
   bool _hover = false;
 
   Future<void> _openLink() async {
     final uri = Uri.parse(widget.url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.secondary;
-    final onBg = Theme.of(context).colorScheme.onBackground;
+    final secondary =
+        Theme.of(context).colorScheme.secondary;
+
+    final onBg =
+        Theme.of(context).colorScheme.onBackground;
 
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
+        onEnter: (_) =>
+            setState(() => _hover = true),
+        onExit: (_) =>
+            setState(() => _hover = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+          duration:
+              const Duration(milliseconds: 120),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: _hover ? secondary.withOpacity(0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            color: _hover
+                ? secondary.withOpacity(0.12)
+                : Colors.transparent,
+            borderRadius:
+                BorderRadius.circular(10),
             border: Border.all(
-              color: _hover ? secondary.withOpacity(0.35) : Colors.transparent,
+              color: _hover
+                  ? secondary.withOpacity(0.35)
+                  : Colors.transparent,
             ),
           ),
           child: IconButton(
@@ -256,7 +275,9 @@ class _SocialIconState extends State<SocialIcon> {
             icon: Icon(
               widget.icon,
               size: 21,
-              color: _hover ? secondary : onBg.withOpacity(0.9),
+              color: _hover
+                  ? secondary
+                  : onBg.withOpacity(0.9),
             ),
           ),
         ),

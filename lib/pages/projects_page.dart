@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../main.dart'; // For supabase client and storageUrl
+
+import '../main.dart';
 import '../widgets/layout.dart';
 import '../widgets/reusable.dart';
 
@@ -29,6 +29,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
           .select()
           .order('s_no', ascending: true)
           .order('created_at', ascending: false);
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw Exception('Failed to load projects: $e');
@@ -37,13 +38,20 @@ class _ProjectsPageState extends State<ProjectsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 720;
+
     return SingleChildScrollView(
       child: AnimatedContentContainer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionTitle("Projects"),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 0),
+              child: const SectionTitle("Projects"),
+            ),
+
             const SizedBox(height: 24),
+
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _projectsFuture,
               builder: (context, snapshot) {
@@ -54,9 +62,11 @@ class _ProjectsPageState extends State<ProjectsPage> {
                 if (snapshot.hasError) {
                   return ErrorState(
                     message: "Failed to load projects. Please try again later.",
-                    onRetry:
-                        () =>
-                            setState(() => _projectsFuture = _fetchProjects()),
+                    onRetry: () {
+                      setState(() {
+                        _projectsFuture = _fetchProjects();
+                      });
+                    },
                   );
                 }
 
@@ -68,55 +78,43 @@ class _ProjectsPageState extends State<ProjectsPage> {
                   );
                 }
 
-                return Responsive(
-                  mobile: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: projects.length,
-                    itemBuilder: (context, index) {
-                      final project = projects[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: ProjectCard(
-                          title: project['title'] ?? "",
-                          description: project['description'] ?? "",
-                          tags:
-                              (project['tags'] as List<dynamic>?)
-                                  ?.cast<String>() ??
-                              const [],
-                          image: project['cover_image_url'],
-                          githubUrl: project['github_url'],
-                          liveUrl: project['live_url'],
-                        ),
-                      );
-                    },
-                  ),
-                  desktop: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth / 3 - 14;
-                      return Wrap(
-                        spacing: 20,
-                        runSpacing: 20,
-                        children:
-                            projects.map((project) {
-                              return SizedBox(
-                                width: width,
-                                child: ProjectCard(
-                                  title: project['title'] ?? "",
-                                  description: project['description'] ?? "",
-                                  tags:
-                                      (project['tags'] as List<dynamic>?)
-                                          ?.cast<String>() ??
-                                      const [],
-                                  image: project['cover_image_url'],
-                                  githubUrl: project['github_url'],
-                                  liveUrl: project['live_url'],
-                                ),
-                              );
-                            }).toList(),
-                      );
-                    },
-                  ),
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = constraints.maxWidth;
+
+                    final int columns =
+                        maxWidth >= 1100 ? 3 : (maxWidth >= 720 ? 2 : 1);
+
+                    final double spacing = 20;
+                    final double cardWidth =
+                        (maxWidth - (spacing * (columns - 1))) / columns;
+
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: Wrap(
+                        key: ValueKey(projects.length),
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        children: List.generate(projects.length, (index) {
+                          final project = projects[index];
+
+                          return SizedBox(
+                            width: cardWidth,
+                            child: ProjectCard(
+                              title: project['title'] ?? "",
+                              description: project['description'] ?? "",
+                              tags: (project['tags'] as List<dynamic>?)
+                                      ?.cast<String>() ??
+                                  const [],
+                              image: project['cover_image_url'],
+                              githubUrl: project['github_url'],
+                              liveUrl: project['live_url'],
+                            ),
+                          );
+                        }),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -158,140 +156,163 @@ class _ProjectCardState extends State<ProjectCard> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final hasImage = widget.image != null && widget.image!.isNotEmpty;
-    final imageUrl =
-        hasImage
-            ? (widget.image!.startsWith('http')
-                ? widget.image!
-                : '$storageUrl/projects/${widget.image}')
-            : null;
+    final imageUrl = hasImage
+        ? (widget.image!.startsWith('http')
+            ? widget.image!
+            : '$storageUrl/projects/${widget.image}')
+        : null;
 
     return MouseRegion(
-          onEnter: (_) => setState(() => isHovered = true),
-          onExit: (_) => setState(() => isHovered = false),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            transform:
-                isHovered
-                    ? (Matrix4.identity()..translate(0.0, -4.0))
-                    : Matrix4.identity(),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      isHovered
-                          ? colorScheme.secondary.withOpacity(0.25)
-                          : Colors.black.withOpacity(0.18),
-                  blurRadius: isHovered ? 12 : 8,
-                  offset: const Offset(0, 3),
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOut,
+        transform: isHovered
+            ? (Matrix4.identity()..translate(0.0, -3.0))
+            : Matrix4.identity(),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isHovered
+                ? colorScheme.secondary.withOpacity(0.28)
+                : colorScheme.onSurface.withOpacity(0.08),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isHovered
+                  ? colorScheme.secondary.withOpacity(0.14)
+                  : Colors.black.withOpacity(0.18),
+              blurRadius: isHovered ? 20 : 12,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (imageUrl != null) _ProjectImage(imageUrl),
+                if (imageUrl != null) const SizedBox(height: 14),
+
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    color: colorScheme.onBackground,
+                    fontSize: 17.5,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 10),
+
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      showFullDescription = !showFullDescription;
+                    });
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.description,
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withOpacity(0.92),
+                          fontSize: 13.7,
+                          height: 1.55,
+                        ),
+                        maxLines: showFullDescription ? null : 4,
+                        overflow: showFullDescription
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
+                      ),
+                      if (widget.description.length > 190)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            showFullDescription ? "Show less" : "Read more",
+                            style: TextStyle(
+                              color: colorScheme.secondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                _TagsRow(colorScheme: colorScheme, tags: widget.tags),
+
+                const SizedBox(height: 14),
+
+                _ActionRow(
+                  colorScheme: colorScheme,
+                  liveUrl: widget.liveUrl,
+                  githubUrl: widget.githubUrl,
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (imageUrl != null) _ProjectImage(imageUrl),
-                    if (imageUrl != null) const SizedBox(height: 12),
-                    _ActionRow(
-                      colorScheme: colorScheme,
-                      liveUrl: widget.liveUrl,
-                      githubUrl: widget.githubUrl,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        color: colorScheme.onBackground,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap:
-                          () => setState(
-                            () => showFullDescription = !showFullDescription,
-                          ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.description,
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 14,
-                              height: 1.5,
-                            ),
-                            maxLines: showFullDescription ? null : 4,
-                            overflow:
-                                showFullDescription
-                                    ? TextOverflow.visible
-                                    : TextOverflow.ellipsis,
-                          ),
-                          if (widget.description.length > 200)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                showFullDescription ? "Show less" : "Read more",
-                                style: TextStyle(
-                                  color: colorScheme.secondary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _TagsRow(colorScheme: colorScheme, tags: widget.tags),
-                  ],
-                ),
-              ),
-            ),
           ),
-        )
-        .animate()
-        .fadeIn(duration: 350.ms, delay: 80.ms)
-        .scale(begin: const Offset(0.97, 0.97), end: const Offset(1, 1));
+        ),
+      ),
+    );
   }
 }
 
 class _ProjectImage extends StatelessWidget {
   final String imageUrl;
 
-  const _ProjectImage(this.imageUrl); // removed `title` parameter
+  const _ProjectImage(this.imageUrl);
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // No onTap -> no maximizing
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxHeight: 140,
-          maxWidth: double.infinity,
-        ),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
+      borderRadius: BorderRadius.circular(14),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 140,
+        fit: BoxFit.cover,
+        memCacheWidth: 700,
+        maxWidthDiskCache: 900,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
+        placeholder: (context, url) => Container(
+          height: 140,
           width: double.infinity,
-          fit: BoxFit.cover,
-          errorWidget: (context, url, error) => Container(
-            height: 80,
-            color: colorScheme.secondary.withOpacity(0.1),
-            child: Icon(
-              Icons.image_not_supported,
-              color: colorScheme.secondary,
+          color: colorScheme.secondary.withOpacity(0.055),
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colorScheme.secondary.withOpacity(0.75),
             ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          height: 140,
+          width: double.infinity,
+          color: colorScheme.secondary.withOpacity(0.08),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: colorScheme.secondary,
           ),
         ),
       ),
@@ -317,102 +338,168 @@ class _ActionRow extends StatelessWidget {
 
     if (!hasLive && !hasSource) return const SizedBox.shrink();
 
-    final baseStyle = OutlinedButton.styleFrom(
-      side: BorderSide(color: colorScheme.outline.withOpacity(0.5), width: 1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(999), // pill
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      minimumSize: Size.zero,
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      foregroundColor: colorScheme.onSurface,
-      textStyle: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
-      ),
-    );
-
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         if (hasLive)
-          OutlinedButton.icon(
-            onPressed: () => launchUrl(Uri.parse(liveUrl!)),
-            style: baseStyle.copyWith(
-              overlayColor: WidgetStateProperty.all(
-                colorScheme.secondary.withOpacity(0.08),
-              ),
+          Expanded(
+            child: _ProjectLinkButton(
+              label: "Demo",
+              icon: Icons.play_arrow_rounded,
+              colorScheme: colorScheme,
+              onPressed: () {
+                launchUrl(
+                  Uri.parse(liveUrl!),
+                  mode: LaunchMode.externalApplication,
+                );
+              },
             ),
-            icon: Icon(
-              Icons.play_arrow_rounded,
-              size: 18,
-              color: colorScheme.secondary,
-            ),
-            label: const Text("Demo"),
-          )
-        else
-          const SizedBox.shrink(),
+          ),
+        if (hasLive && hasSource) const SizedBox(width: 10),
         if (hasSource)
-          OutlinedButton.icon(
-            onPressed: () => launchUrl(Uri.parse(githubUrl!)),
-            style: baseStyle.copyWith(
-              overlayColor: WidgetStateProperty.all(
-                colorScheme.secondary.withOpacity(0.08),
-              ),
+          Expanded(
+            child: _ProjectLinkButton(
+              label: "Code",
+              icon: Icons.code_rounded,
+              colorScheme: colorScheme,
+              onPressed: () {
+                launchUrl(
+                  Uri.parse(githubUrl!),
+                  mode: LaunchMode.externalApplication,
+                );
+              },
             ),
-            icon: Icon(
-              Icons.code_rounded,
-              size: 18,
-              color: colorScheme.secondary,
-            ),
-            label: const Text("Code"),
           ),
       ],
     );
   }
 }
 
-class _TagsRow extends StatelessWidget {
+class _ProjectLinkButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
   final ColorScheme colorScheme;
-  final List<String> tags;
+  final VoidCallback onPressed;
 
-  const _TagsRow({required this.colorScheme, required this.tags});
+  const _ProjectLinkButton({
+    required this.label,
+    required this.icon,
+    required this.colorScheme,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (tags.isEmpty) return const SizedBox.shrink();
-
-    return SizedBox(
-      height: 36,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children:
-                tags
-                    .map(
-                      (tag) => Chip(
-                        label: Text(
-                          tag,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.secondary,
-                          ),
-                        ),
-                        backgroundColor: colorScheme.secondary.withOpacity(0.1),
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                    .toList(),
-          ),
-        ],
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        icon,
+        size: 17,
+        color: Colors.white,
+      ),
+      label: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: BorderSide(
+          color: colorScheme.secondary.withOpacity(0.35),
+          width: 1,
+        ),
+        backgroundColor: colorScheme.secondary.withOpacity(0.045),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.1,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
 }
 
+class _TagsRow extends StatefulWidget {
+  final ColorScheme colorScheme;
+  final List<String> tags;
 
+  const _TagsRow({
+    required this.colorScheme,
+    required this.tags,
+  });
+
+  @override
+  State<_TagsRow> createState() => _TagsRowState();
+}
+
+class _TagsRowState extends State<_TagsRow> {
+  bool showAllTags = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.tags.isEmpty) return const SizedBox.shrink();
+
+    final visibleTags = showAllTags ? widget.tags : widget.tags.take(4).toList();
+    final remaining = widget.tags.length - 4;
+
+    return Wrap(
+      spacing: 7,
+      runSpacing: 7,
+      children: [
+        ...visibleTags.map(
+          (tag) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: widget.colorScheme.secondary.withOpacity(0.075),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: widget.colorScheme.secondary.withOpacity(0.18),
+              ),
+            ),
+            child: Text(
+              tag,
+              style: TextStyle(
+                fontSize: 11,
+                color: widget.colorScheme.secondary.withOpacity(0.95),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+
+        if (remaining > 0)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                showAllTags = !showAllTags;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: widget.colorScheme.onSurface.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: widget.colorScheme.onSurface.withOpacity(0.12),
+                ),
+              ),
+              child: Text(
+                showAllTags ? "LESS" : "+$remaining",
+                style: TextStyle(
+                  fontSize: 11,
+                  color: widget.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}

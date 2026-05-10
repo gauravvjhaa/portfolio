@@ -11,7 +11,7 @@ import 'pages/blog_page.dart';
 import 'pages/blog_details.dart';
 import 'pages/contact_page.dart';
 import 'pages/certifications_page.dart';
-import 'pages/gallery_page.dart';
+// import 'pages/gallery_page.dart';
 import 'pages/resume_page.dart';
 import 'pages/open_source_page.dart';
 
@@ -85,9 +85,9 @@ class PortfolioApp extends StatelessWidget {
             case 'certifications':
               page = const CertificationsPage();
               break;
-            case 'gallery':
-              page = const GalleryPage();
-              break;
+            // case 'gallery':
+            //   page = const GalleryPage();
+            //   break;
             case 'resume':
               page = const ResumePage();
               break;
